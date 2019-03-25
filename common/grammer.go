@@ -6,10 +6,7 @@ import (
 	"strings"
 )
 
-type RightHandSide struct {
-	Symbols []string
-}
-
+type RightHandSide []string
 
 type NonTerminal struct {
 	Symbol string
@@ -26,25 +23,26 @@ const (
 	Right uint8 = iota
 ) 
 
-func getSide(line string, i uint8) string {
+func getSide(line string, i uint8, sep string) string {
 	if i > 1 {
 		log.Fatal("i > 1")
 	}
-	sides := strings.Split(line, "->")
+	sides := strings.Split(line, sep)
 	if len(sides) != 2 {
 		log.Fatal(line + "has sides unequal to 2")
 	}
-	return strings.TrimRight(strings.TrimLeft(sides[i], " "), " ")
+	return strings.TrimSpace(sides[i])
 }
 
+/* get symbols in a expression, like "a + b" -> "a", "+", "b" */
 func getSymbols(line string) []string {
-	subs := strings.Split(line, " ")
+	subs := strings.Split(strings.TrimSpace(line), " ")
 	if len(subs) <= 0 {
 		log.Fatal("no symbol in " + line)
 	}
 	res := []string{}
 	for _, s := range subs {
-		res = append(res, strings.TrimSpace(s))
+		res = append(res, s)
 	}
 	return res
 }
@@ -62,7 +60,7 @@ func ReadGrammar(content string) Grammar {
 		nt := NonTerminal{}
 
 		// get non-terminal symbol from left-side
-		nt.Symbol = getSide(l, Left)
+		nt.Symbol = getSide(l, Left, "->")
 
 		// identify start symbol
 		if idx == 0 {
@@ -70,11 +68,11 @@ func ReadGrammar(content string) Grammar {
 		}
 
 		// get right-hand side
-		rightSide := getSide(l, Right)
+		rightSide := getSide(l, Right, "->")
 		opts := strings.Split(rightSide, "|")
 		for _, opt := range opts {
-			rhSide := RightHandSide{getSymbols(opt)}
-			nt.RHSides = append(nt.RHSides, rhSide)
+			rhSide := getSymbols(opt)
+			nt.RHSides = append(nt.RHSides, RightHandSide(rhSide))
 		}
 
 		// construct map
