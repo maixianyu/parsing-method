@@ -33,6 +33,7 @@ func TestGetSide(t *testing.T) {
 }
 
 func TestReadGrammar(t *testing.T) {
+	/*read from string*/
 	expect1 := Grammar{
 		StartSymbol: "Expr",
 		Symb2NTerminal: map[string]NonTerminal{
@@ -44,6 +45,9 @@ func TestReadGrammar(t *testing.T) {
 							"+",
 							"Term",
 						}),
+						RightHandSide([]string{
+							"Term",
+						}),
 					},
 				},
 			"Term": NonTerminal{
@@ -52,7 +56,20 @@ func TestReadGrammar(t *testing.T) {
 						RightHandSide([]string{
 							"Term",
 							"x",
-							"i",
+							"Factor",
+						}),
+						RightHandSide([]string{
+							"Factor",
+						}),
+					},
+				},
+			"Factor": NonTerminal{
+				Symbol: "Factor",
+				RHSides: []RightHandSide{
+						RightHandSide([]string{
+							"(",
+							"Expr",
+							")",
 						}),
 						RightHandSide([]string{
 							"i",
@@ -61,11 +78,21 @@ func TestReadGrammar(t *testing.T) {
 				},
 			},
 		}
-	input1 := "Expr -> Expr + Term\nTerm -> Term x i | i"
+	input1 := "Expr -> Expr + Term | Term\nTerm -> Term x Factor | Factor\nFactor -> ( Expr ) | i"
 	res1 := ReadGrammar(input1)
 	eq := reflect.DeepEqual(expect1, res1)
 	if eq == false {
-		t.Errorf("want: %v, get: %v",
+		t.Errorf("want: %v\nget: %v",
 			expect1, res1)
+	}
+
+	/* read from file */
+	input2 := "../samples/arithmetic"
+	res2 := ReadGrammarFromFile(input2)
+	expect2 := expect1
+	eq = reflect.DeepEqual(expect2, res2)
+	if eq == false {
+		t.Errorf("want: %v\nget: %v",
+			expect2, res2)
 	}
 }

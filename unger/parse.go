@@ -6,11 +6,26 @@ import (
 	. "github.com/maixianyu/parsing-method/common"
 )
 
-func parse(gram Grammar, input string) []string {
-	trace := []string{}
+func parse(gram Grammar, input string) ([]string, bool) {
 	// try to match start symbol
 	trace, ok := matchNonTerminal(gram, gram.StartSymbol, input)
-	return trace
+	res := []string{}
+	if ok == true {
+		for _, t := range trace {
+			res = append(res, t + " ->")
+		}
+		return res, true
+	} else {
+		return []string{"fail to parse the input."}, false
+	}
+}
+
+func matchTerminal(symb string, input string) (string, bool) {
+	if symb == input {
+		return input, true
+	} else {
+		return input, false
+	}
 }
 
 func matchNonTerminal(gram Grammar, symb string, input string) ([]string, bool) {
@@ -23,8 +38,9 @@ func matchNonTerminal(gram Grammar, symb string, input string) ([]string, bool) 
 
 	// match every right-hand side
 	for _, rhSide := range NTerminal.RHSides {
-		res, ok := matchRightHandSide(gram, rhSide, input, []string{})
+		res, ok := matchRightHandSide(gram, rhSide, input)
 		if ok == true {
+			trace = append(trace, symb)
 			trace = append(trace, res...)
 			return trace, true
 		}
@@ -33,41 +49,37 @@ func matchNonTerminal(gram Grammar, symb string, input string) ([]string, bool) 
 	return []string{}, false
 }
 
-func matchTerminal(symb string, input string) bool {
-	if symb == input {
-		return true
-	} else {
-		return false
+
+func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string) ([]string, bool) {
+	numSymbol := len(rhSide)
+	inputPartitions := GeneratePartitions(input, numSymbol)
+
+	// step 1: eliminate some partitions unmatch with terminal
+	inputPartitions = grepWithTerminal(gram, inputPartitions, rhSide)
+	if len(inputPartitions) == 0 {
+		return []string{}, false
 	}
-}
 
-func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string, trace []string) ([]string, bool) {
-	numSymbol := len(rhSide.Symbols)
-	inputPartitions := generatePartitions(input, numSymbol)
 
-	// eliminate some partitions unmatch with terminal
-	inputPartitions = grepWithTerminal(gram, inputPartitions, rhSide.Symbols)
-
-	res := trace
-
+	// step 2: match terminals or non-terminals in right-hand side
+	traces := [][]string{}
 	for _, part := range inputPartitions {
-		// each symbol in right-hand side expression
-		for idx, s := range rhSide.Symbols {
-			nt, ok := gram.Symb2NTerminal[s]
+		for idx, s := range rhSide {
+			_, ok := gram.Symb2NTerminal[s]
 			if ok == true {
 				// compared with non-terminal
-				matchStr, matched := matchNonTerminal(gram, s, p)
+				matchTrace, matched := matchNonTerminal(gram, s, part[idx])
 				if matched == true {
-					res = append(res, matchStr...)
+					traces = append(traces, matchTrace)
 				} else {
 					return []string{}, false
 				}
 
 			} else {
 				// compared with terminal
-				resTerminal := matchTerminal(s, part[idx])
-				if resTerminal == true {
-					res = append(res, s)
+				matchTrace, matched := matchTerminal(s, part[idx])
+				if matched == true {
+					traces = append(traces, []string{matchTrace})
 				} else {
 					return []string{}, false
 				}
@@ -76,28 +88,11 @@ func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string, trace 
 		}
 	}
 
-	return []string{}, false
+	// step 3: generate []string{} from trace and rhSide
+	res := CombTraceWithTemplate(traces, rhSide)
+	return res, true
 }
 
-func genPartitionsHelper(preRes []string, input string, num int) [][]string {
-	if num == 0 || len(input) < num {
-		return [][]string{}
-	}
-	inputSlice := []rune(input)
-	var res = [][]string{}
-	for i := 1; i<=num; i++ {
-		curRes := inputSlice[0:i]
-		res = append(res, genPartitionsHelper(append(preRes, string(curRes)), string(inputSlice[i:]), num-1)...)
-	}
-	return res
-}
-
-func generatePartitions(input string, num int) [][]string{
-	if num == 0 || len(input) < num {
-		return [][]string{}
-	}
-	return genPartitionsHelper([]string{}, input, num)
-}
 
 func grepWithTerminal(gram Grammar, partitions [][]string, symbols []string) [][]string {
 	if len(partitions) == 0 {
@@ -110,17 +105,23 @@ func grepWithTerminal(gram Grammar, partitions [][]string, symbols []string) [][
 	idxTerminal := []int{}
 	for idx, s := range symbols {
 		_, found := gram.Symb2NTerminal[s]
-		if found == true {
+		if found == false {
 			idxTerminal = append(idxTerminal, idx)
 		}
+	}
+
+	// return if no terminals
+	if len(idxTerminal) == 0 {
+		return partitions
 	}
 	
 	res := [][]string{}
 	// match terminal
+	Parts:
 	for _, p := range partitions {
 		for _, idxTerm := range idxTerminal {
 			if p[idxTerm] != symbols[idxTerm] {
-				break
+				continue Parts
 			}
 		}
 		res = append(res, p)

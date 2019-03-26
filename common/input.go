@@ -40,7 +40,7 @@ func genPartitionsHelper(preRes []string, input string, num int) ([][]string, bo
 	return res, true
 }
 
-func generatePartitions(input string, num int) [][]string{
+func GeneratePartitions(input string, num int) [][]string{
 	if num <= 0 || len(input) < num {
 		return [][]string{}
 	}
