@@ -18,12 +18,20 @@ type Grammar struct {
 	Symb2NTerminal map[string]NonTerminal
 }
 
+type Side uint8
+
 const (
-	Left uint8  = iota
-	Right uint8 = iota
+	Left Side  = iota
+	Right Side = iota
 ) 
 
-func getSide(line string, i uint8, sep string) string {
+type ERule uint8
+const (
+	HasERule ERule = iota
+	NoERule ERule = iota
+) 
+
+func getSide(line string, i Side, sep string) string {
 	if i > 1 {
 		log.Fatal("i > 1")
 	}

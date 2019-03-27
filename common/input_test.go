@@ -1,36 +1,54 @@
 package common
 
 import (
-	"fmt"
+	//"fmt"
 	"testing"
 )
 
+func checkRes(t *testing.T, res [][]string, expect [][]string) {
+	if StringSSEqual(res, expect) == false {
+		t.Errorf("want %v, got %v", expect, res)
+	}
+}
 
-func TestGeneratePartitions(t *testing.T) {
+func TestGeneratePartitionsNoERule(t *testing.T) {
 	var input string
 	var num int
 	var res [][]string
 	var expect [][]string
+	var rule ERule
 
 	input = "12345678"
 	num = 0
-	res = GeneratePartitions(input, num)
+	/*NoERule*/
+	rule = NoERule
+	res = GeneratePartitions(input, num, rule)
 	expect = [][]string{}
-	if StringSSEqual(res, expect) == false {
-		t.Errorf("want %v, got %v", expect, res)
-	}
+	checkRes(t, res, expect)
+	/*HasERule*/
+	rule = HasERule
+	res = GeneratePartitions(input, num, rule)
+	expect = [][]string{}
+	checkRes(t, res, expect)
 
 	input = "12345678"
 	num = 1
-	res = GeneratePartitions(input, num)
+	/* NoERule */
+	rule = NoERule
+	res = GeneratePartitions(input, num, rule)
 	expect = [][]string{[]string{"12345678"}}
-	if StringSSEqual(res, expect) == false {
-		t.Errorf("want %v, got %v", expect, res)
-	}
+	checkRes(t, res, expect)
+	/* HasERule */
+	rule = HasERule
+	res = GeneratePartitions(input, num, rule)
+	expect = [][]string{[]string{"12345678"}}
+	checkRes(t, res, expect)
 
 	input = "12345678"
 	num = 2
-	res = GeneratePartitions(input, num)
+	/*NoERule*/
+	rule = NoERule
+	res = GeneratePartitions(input, num, rule)
 	expect = [][]string{
 		[]string{"1", "2345678"},
 		[]string{"12", "345678"},
@@ -40,28 +58,49 @@ func TestGeneratePartitions(t *testing.T) {
 		[]string{"123456", "78"},
 		[]string{"1234567", "8"},
 	}
-	if StringSSEqual(res, expect) == false {
-		t.Errorf("want %v, got %v", expect, res)
+	checkRes(t, res, expect)
+	/* HasERule */
+	rule = HasERule
+	res = GeneratePartitions(input, num, rule)
+	expect = [][]string{
+		[]string{"", "12345678"},
+		[]string{"1", "2345678"},
+		[]string{"12", "345678"},
+		[]string{"123", "45678"},
+		[]string{"1234", "5678"},
+		[]string{"12345", "678"},
+		[]string{"123456", "78"},
+		[]string{"1234567", "8"},
+		[]string{"12345678", ""},
 	}
+	checkRes(t, res, expect)
 
+	/*NoERule*/
 	input = "12345678"
 	num = 8
-	fmt.Printf("\ntesting input:%v num:%v\n", input, num)
-	res = GeneratePartitions(input, num)
+	rule = NoERule
+	res = GeneratePartitions(input, num, rule)
 	expect = [][]string{
 		[]string{"1", "2", "3", "4", "5", "6", "7", "8"},
 	}
-	if StringSSEqual(res, expect) == false {
-		t.Errorf("want %v, got %v", expect, res)
-	}
-
-	fmt.Printf("\ntesting\n")
+	checkRes(t, res, expect)
+	/* HasERule */
+	input = "123"
+	num = 3
+	rule = HasERule
+	res = GeneratePartitions(input, num, rule)
 	expect = [][]string{
-		[]string{"1", "2", "3", "4", "5", "6", "7"},
+		[]string{"", "", "123"},
+		[]string{"", "1", "23"},
+		[]string{"", "12", "3"},
+		[]string{"", "123", ""},
+		[]string{"1", "", "23"},
+		[]string{"1", "2", "3"},
+		[]string{"1", "23", ""},
+		[]string{"12", "", "3"},
+		[]string{"12", "3", ""},
+		[]string{"123", "", ""},
 	}
-	res, _ = genPartitionsHelper([]string{"1", "2", "3", "4"}, "567", 3)
-	if StringSSEqual(res, expect) == false {
-		t.Errorf("want %v, got %v", expect, res)
-	}
+	checkRes(t, res, expect)
 
 }
