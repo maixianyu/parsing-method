@@ -31,6 +31,8 @@ const (
 	NoERule ERule = iota
 ) 
 
+var keyChar map[string]string
+
 func getSide(line string, i Side, sep string) string {
 	if i > 1 {
 		log.Fatal("i > 1")
@@ -42,6 +44,20 @@ func getSide(line string, i Side, sep string) string {
 	return strings.TrimSpace(sides[i])
 }
 
+func initKeyChar() {
+	keyChar = map[string]string{}
+	keyChar["epsilon"] = ""
+}
+
+func transKeyChar(input string) string {
+	ch, found := keyChar[input]
+	if found {
+		return ch
+	} else {
+		return input
+	}
+}
+
 /* get symbols in a expression, like "a + b" -> "a", "+", "b" */
 func getSymbols(line string) []string {
 	subs := strings.Split(strings.TrimSpace(line), " ")
@@ -50,14 +66,18 @@ func getSymbols(line string) []string {
 	}
 	res := []string{}
 	for _, s := range subs {
-		res = append(res, s)
+		res = append(res, transKeyChar(s))
 	}
 	return res
 }
 
 
+
 func ReadGrammar(content string) Grammar {
 	var gram Grammar
+
+	/* init keyChar map*/
+	initKeyChar()
 
 	// get each line from grammar file
 	lines := strings.Split(string(content), "\n")

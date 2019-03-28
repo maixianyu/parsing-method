@@ -6,12 +6,22 @@ import (
 )
 
 func TestGetSymbols(t *testing.T) {
-	sp1 := " a b c d "
-	expect1 := []string{"a", "b", "c", "d"}
-	res1 := getSymbols(sp1)
-	if StringSliceEqual(res1, expect1) == false {
+	initKeyChar()
+
+	sample := " a b c d "
+	expect := []string{"a", "b", "c", "d"}
+	res := getSymbols(sample)
+	if StringSliceEqual(res, expect) == false {
 		t.Errorf("want: %v, len(%d), get: %v, len(%d)\n",
-			expect1, len(expect1), res1, len(res1))
+			expect, len(expect), res, len(res))
+	}
+
+	sample = " a epsilon c epsilon "
+	expect = []string{"a", "", "c", ""}
+	res = getSymbols(sample)
+	if StringSliceEqual(res, expect) == false {
+		t.Errorf("want: %v, len(%d), get: %v, len(%d)\n",
+			expect, len(expect), res, len(res))
 	}
 }
 

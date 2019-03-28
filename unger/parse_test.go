@@ -12,7 +12,7 @@ func TestGrepWithTerminal(t *testing.T) {
 
 	/* teminal in symbols*/
 	symbols := []string{"Term", "x", "Factor"}
-	partitions := common.GeneratePartitions("(ixi)", len(symbols))
+	partitions := common.GeneratePartitions("(ixi)", len(symbols), common.NoERule)
 	expect := [][]string{
 		[]string{"(i", "x", "i)"},
 	}
@@ -25,7 +25,7 @@ func TestGrepWithTerminal(t *testing.T) {
 
 	/* no teminal in symbols*/
 	symbols = []string{"Term"}
-	partitions = common.GeneratePartitions("(ixi)", len(symbols))
+	partitions = common.GeneratePartitions("(ixi)", len(symbols), common.NoERule)
 	expect = partitions
 	res = grepWithTerminal(gram, partitions, symbols)
 

@@ -6,14 +6,18 @@ import (
 	. "github.com/maixianyu/parsing-method/common"
 )
 
-func parse(gram Grammar, input string) ([]string, bool) {
+type answer uint
+const (
+	yes answer = 0
+	no answer = 1
+)
+var cutOff map[string]answer
+
+func parse(gram Grammar, input string, erule ERule) ([]string, bool) {
 	// try to match start symbol
-	trace, ok := matchNonTerminal(gram, gram.StartSymbol, input)
-	res := []string{}
+	trace, ok := matchNonTerminal(gram, gram.StartSymbol, input, erule)
 	if ok == true {
-		for _, t := range trace {
-			res = append(res, t + " ->")
-		}
+		res := AppendString2StrSlice(trace, " ->")
 		return res, true
 	} else {
 		return []string{"fail to parse the input."}, false
@@ -28,7 +32,7 @@ func matchTerminal(symb string, input string) (string, bool) {
 	}
 }
 
-func matchNonTerminal(gram Grammar, symb string, input string) ([]string, bool) {
+func matchNonTerminal(gram Grammar, symb string, input string, erule ERule) ([]string, bool) {
 	trace := []string{}
 	// map NonTerminal from Symbol
 	NTerminal, ok := gram.Symb2NTerminal[symb]
@@ -38,7 +42,7 @@ func matchNonTerminal(gram Grammar, symb string, input string) ([]string, bool) 
 
 	// match every right-hand side
 	for _, rhSide := range NTerminal.RHSides {
-		res, ok := matchRightHandSide(gram, rhSide, input)
+		res, ok := matchRightHandSide(gram, rhSide, input, erule)
 		if ok == true {
 			trace = append(trace, symb)
 			trace = append(trace, res...)
@@ -50,9 +54,9 @@ func matchNonTerminal(gram Grammar, symb string, input string) ([]string, bool) 
 }
 
 
-func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string) ([]string, bool) {
+func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string, erule ERule) ([]string, bool) {
 	numSymbol := len(rhSide)
-	inputPartitions := GeneratePartitions(input, numSymbol)
+	inputPartitions := GeneratePartitions(input, numSymbol, erule)
 
 	// step 1: eliminate some partitions unmatch with terminal
 	inputPartitions = grepWithTerminal(gram, inputPartitions, rhSide)
@@ -68,7 +72,7 @@ func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string) ([]str
 			_, ok := gram.Symb2NTerminal[s]
 			if ok == true {
 				// compared with non-terminal
-				matchTrace, matched := matchNonTerminal(gram, s, part[idx])
+				matchTrace, matched := matchNonTerminal(gram, s, part[idx], erule)
 				if matched == true {
 					traces = append(traces, matchTrace)
 				} else {
@@ -88,7 +92,7 @@ func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string) ([]str
 		}
 	}
 
-	// step 3: generate []string{} from trace and rhSide
+	/* step 3: generate []string{} from trace and rhSide */
 	res := CombTraceWithTemplate(traces, rhSide)
 	return res, true
 }
