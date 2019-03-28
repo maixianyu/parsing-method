@@ -1,0 +1,3 @@
+S -> L S D | epsilon
+L -> epsilon
+D -> d

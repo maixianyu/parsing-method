@@ -42,9 +42,11 @@ func TestGetSide(t *testing.T) {
 	}
 }
 
+
 func TestReadGrammar(t *testing.T) {
+	/* NoERule */
 	/*read from string*/
-	expect1 := Grammar{
+	expect := Grammar{
 		StartSymbol: "Expr",
 		Symb2NTerminal: map[string]NonTerminal{
 			"Expr": NonTerminal{
@@ -88,21 +90,65 @@ func TestReadGrammar(t *testing.T) {
 				},
 			},
 		}
-	input1 := "Expr -> Expr + Term | Term\nTerm -> Term x Factor | Factor\nFactor -> ( Expr ) | i"
-	res1 := ReadGrammar(input1)
-	eq := reflect.DeepEqual(expect1, res1)
+	input := "Expr -> Expr + Term | Term\nTerm -> Term x Factor | Factor\nFactor -> ( Expr ) | i"
+	res := ReadGrammar(input)
+	eq := reflect.DeepEqual(expect, res)
 	if eq == false {
 		t.Errorf("want: %v\nget: %v",
-			expect1, res1)
+			expect, res)
 	}
 
 	/* read from file */
-	input2 := "../samples/arithmetic"
-	res2 := ReadGrammarFromFile(input2)
-	expect2 := expect1
-	eq = reflect.DeepEqual(expect2, res2)
+	input = "../samples/arithmetic"
+	res = ReadGrammarFromFile(input)
+	eq = reflect.DeepEqual(expect, res)
 	if eq == false {
 		t.Errorf("want: %v\nget: %v",
-			expect2, res2)
+			expect, res)
+	}
+
+
+	/* HasERule */
+	/*read from string*/
+	expect = Grammar{
+		StartSymbol: "S",
+		Symb2NTerminal: map[string]NonTerminal{
+			"S": NonTerminal{
+				Symbol: "S",
+				RHSides: []RightHandSide{
+						RightHandSide([]string{
+							"L",
+							"S",
+							"D",
+						}),
+						RightHandSide([]string{
+							"",
+						}),
+					},
+				},
+			"L": NonTerminal{
+				Symbol: "L",
+				RHSides: []RightHandSide{
+						RightHandSide([]string{
+							"",
+						}),
+					},
+				},
+			"D": NonTerminal{
+				Symbol: "D",
+				RHSides: []RightHandSide{
+						RightHandSide([]string{
+							"d",
+						}),
+					},
+				},
+			},
+		}
+	input = "S -> L S D | epsilon\nL -> epsilon\nD -> d"
+	res = ReadGrammar(input)
+	eq = reflect.DeepEqual(expect, res)
+	if eq == false {
+		t.Errorf("want: %v\nget: %v",
+			expect, res)
 	}
 }

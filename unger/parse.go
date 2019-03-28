@@ -2,18 +2,19 @@ package unger
 
 import (
 	"log"
-
+	"fmt"
 	. "github.com/maixianyu/parsing-method/common"
 )
 
-type answer uint
-const (
-	yes answer = 0
-	no answer = 1
-)
+type answer struct {
+	tf bool
+	rec []string
+}
 var cutOff map[string]answer
 
 func parse(gram Grammar, input string, erule ERule) ([]string, bool) {
+	cutOff = map[string]answer{}
+
 	// try to match start symbol
 	trace, ok := matchNonTerminal(gram, gram.StartSymbol, input, erule)
 	if ok == true {
@@ -33,22 +34,48 @@ func matchTerminal(symb string, input string) (string, bool) {
 }
 
 func matchNonTerminal(gram Grammar, symb string, input string, erule ERule) ([]string, bool) {
-	trace := []string{}
 	// map NonTerminal from Symbol
 	NTerminal, ok := gram.Symb2NTerminal[symb]
 	if ok == false {
 		log.Fatal("Symol cannot be found in NonTerminal: " + symb)
 	}
 
+	ques := symb + "->" + input
+	fmt.Println(ques)
+	if erule == HasERule {
+		/* search for question symb->input first  */
+		asw, found := cutOff[ques]
+		if found {
+			return asw.rec, asw.tf
+		} else {
+			/* update cutOff map*/
+			cutOff[ques] = answer{
+				tf: false,
+				rec: []string{},
+			}
+		}
+	}
+
 	// match every right-hand side
+	trace := []string{}
+	fmt.Printf("begin symb:%s, rhSides:%v, input:%s\n", symb, NTerminal.RHSides, input)
 	for _, rhSide := range NTerminal.RHSides {
 		res, ok := matchRightHandSide(gram, rhSide, input, erule)
 		if ok == true {
+			fmt.Printf("finish symb:%s, rhSide:%v, input:%s, res:%v\n", symb, rhSide, input, ok)
 			trace = append(trace, symb)
 			trace = append(trace, res...)
+			/* update cutOff map*/
+			if erule == HasERule {
+				cutOff[ques] = answer{
+					tf: true,
+					rec: trace,
+				}
+			}
 			return trace, true
 		}
 	}
+	fmt.Printf("finish symb:%s, input:%s, res:%v\n", symb, input, false)
 
 	return []string{}, false
 }
@@ -56,7 +83,10 @@ func matchNonTerminal(gram Grammar, symb string, input string, erule ERule) ([]s
 
 func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string, erule ERule) ([]string, bool) {
 	numSymbol := len(rhSide)
-	inputPartitions := GeneratePartitions(input, numSymbol, erule)
+	inputPartitions, ok := GeneratePartitions(input, numSymbol, erule)
+	if ok == false {
+		return []string{}, false
+	}
 
 	// step 1: eliminate some partitions unmatch with terminal
 	inputPartitions = grepWithTerminal(gram, inputPartitions, rhSide)
@@ -76,6 +106,7 @@ func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string, erule 
 				if matched == true {
 					traces = append(traces, matchTrace)
 				} else {
+					//fmt.Printf("false symb:%s, input:%s\n", s, input)
 					return []string{}, false
 				}
 
@@ -88,8 +119,10 @@ func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string, erule 
 					return []string{}, false
 				}
 			}
-
 		}
+
+		/* once a rhSide matches input, then break */
+		break
 	}
 
 	/* step 3: generate []string{} from trace and rhSide */

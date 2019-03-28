@@ -12,7 +12,7 @@ func TestGrepWithTerminal(t *testing.T) {
 
 	/* teminal in symbols*/
 	symbols := []string{"Term", "x", "Factor"}
-	partitions := common.GeneratePartitions("(ixi)", len(symbols), common.NoERule)
+	partitions, _ := common.GeneratePartitions("(ixi)", len(symbols), common.NoERule)
 	expect := [][]string{
 		[]string{"(i", "x", "i)"},
 	}
@@ -25,7 +25,7 @@ func TestGrepWithTerminal(t *testing.T) {
 
 	/* no teminal in symbols*/
 	symbols = []string{"Term"}
-	partitions = common.GeneratePartitions("(ixi)", len(symbols), common.NoERule)
+	partitions, _ = common.GeneratePartitions("(ixi)", len(symbols), common.NoERule)
 	expect = partitions
 	res = grepWithTerminal(gram, partitions, symbols)
 
@@ -35,7 +35,7 @@ func TestGrepWithTerminal(t *testing.T) {
 
 }
 
-func TestParse(t *testing.T) {
+func TestParseNoERule(t *testing.T) {
 	gramfile := "../samples/arithmetic"
 	gram := common.ReadGrammarFromFile(gramfile)
 
@@ -49,7 +49,8 @@ func TestParse(t *testing.T) {
 		"i+Factor ->",
 		"i+i ->",
 	}
-	res, ok := parse(gram, input)
+	rule := common.NoERule
+	res, ok := parse(gram, input, rule)
 	t.Log(strings.Join(res, "\n"))
 	if ok != true || common.StringSliceEqual(res, expect) == false {
 		t.Errorf("want: %v\nget: %v", expect, res)
@@ -71,7 +72,29 @@ func TestParse(t *testing.T) {
 		"(i+i)xFactor ->",
 		"(i+i)xi ->",
 	}
-	res, ok = parse(gram, input)
+	res, ok = parse(gram, input, rule)
+	t.Log(strings.Join(res, "\n"))
+	if ok != true || common.StringSliceEqual(res, expect) == false {
+		t.Errorf("want: %v\nget: %v", expect, res)
+	}
+}
+
+
+func TestParseHasERule(t *testing.T) {
+	gramfile := "../samples/LSD"
+	gram := common.ReadGrammarFromFile(gramfile)
+	rule := common.HasERule
+	t.Log(gram)
+
+	input := "d"
+	expect := []string{
+		"S ->",
+		"LSD ->",
+		"SD ->",
+		"D ->",
+		"d ->",
+	}
+	res, ok := parse(gram, input, rule)
 	t.Log(strings.Join(res, "\n"))
 	if ok != true || common.StringSliceEqual(res, expect) == false {
 		t.Errorf("want: %v\nget: %v", expect, res)

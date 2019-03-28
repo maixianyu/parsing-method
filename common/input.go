@@ -4,7 +4,7 @@ import (
 	//"fmt"
 )
 
-func genPartitionsHelper(input string, num int, erule ERule) ([][]string, bool) {
+func GeneratePartitions(input string, num int, erule ERule) ([][]string, bool) {
 	inputSlice := []rune(input)
 
 	// set condition to finish recursive
@@ -47,7 +47,7 @@ func genPartitionsHelper(input string, num int, erule ERule) ([][]string, bool) 
 	N := len(inputSlice)
 	for i := startIdx; i<=N; i++ {
 		curRes := inputSlice[0:i]
-		nxtRes, ok := genPartitionsHelper(string(inputSlice[i:N]), num-1, erule)
+		nxtRes, ok := GeneratePartitions(string(inputSlice[i:N]), num-1, erule)
 		if ok == true {
 			if len(nxtRes) == 0 {
 				combRes := []string{string(curRes)}
@@ -62,12 +62,4 @@ func genPartitionsHelper(input string, num int, erule ERule) ([][]string, bool) 
 		}
 	}
 	return res, true
-}
-
-func GeneratePartitions(input string, num int, erule ERule) [][]string{
-	if num <= 0 || len(input) < num {
-		return [][]string{}
-	}
-	res, _ := genPartitionsHelper(input, num, erule)
-	return res
 }
