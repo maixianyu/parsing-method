@@ -44,6 +44,8 @@ func TestGetSide(t *testing.T) {
 
 
 func TestReadGrammar(t *testing.T) {
+	/* difference between NoERule and HasERule lies in if epsilon exists in input */
+
 	/* NoERule */
 	/*read from string*/
 	expect := Grammar{

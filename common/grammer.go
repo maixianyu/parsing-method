@@ -14,8 +14,23 @@ type NonTerminal struct {
 }
 
 type Grammar struct {
+	/*
+	Expr -> Expr + Term | Term
+	Term -> Term x Factor | Factor
+	Factor -> ( Expr ) | i
+	*/
+
+	/* first symble on left-hand side of the first-line expression */
+	/* example: Expr is the start symbol */
 	StartSymbol string
+
+	/* symbol -> non-terminal struct */
+	/* example: Expr, Term and Factor are non-terminal symbol */
 	Symb2NTerminal map[string]NonTerminal
+
+	/* right-hand side string -> non-termial symbol slice*/
+	/* example: Term -> Expr, Factor -> Term, i -> Factor */
+	RhSide2NTSymb map[string][]string
 }
 
 type Side uint8
@@ -83,27 +98,35 @@ func ReadGrammar(content string) Grammar {
 	lines := strings.Split(string(content), "\n")
 	gram.Symb2NTerminal = make(map[string]NonTerminal, len(lines))
 	
-	// construct non-terminal from each line
+	/* process each line */ 
 	for idx, l := range lines {
 		nt := NonTerminal{}
 
-		// get non-terminal symbol from left-side
+		/* left-hand side: get non-terminal symbol */
 		nt.Symbol = getSide(l, Left, "->")
-
-		// identify start symbol
 		if idx == 0 {
 			gram.StartSymbol = nt.Symbol
 		}
 
-		// get right-hand side
+		/* right-hand side:  */
 		rightSide := getSide(l, Right, "->")
 		opts := strings.Split(rightSide, "|")
 		for _, opt := range opts {
 			rhSide := getSymbols(opt)
+
+			/* construct RhSide2NTSymb map */
+			strRhSide := strings.Join(rhSide, "")
+			ntSymb, found := gram.RhSide2NTSymb[strRhSide]
+			if found {
+				ntSymb = append(ntSymb, strRhSide)
+			} else {
+				ntSymb = []string{strRhSide}
+			}
+
+			/* gether rhSides */
 			nt.RHSides = append(nt.RHSides, RightHandSide(rhSide))
 		}
-
-		// construct map
+		/* construct Symb2NTerminal map */
 		gram.Symb2NTerminal[nt.Symbol] = nt
 	}
 
