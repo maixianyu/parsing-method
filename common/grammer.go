@@ -94,9 +94,11 @@ func ReadGrammar(content string) Grammar {
 	/* init keyChar map*/
 	initKeyChar()
 
-	// get each line from grammar file
+	/* get each line from grammar file */
 	lines := strings.Split(string(content), "\n")
+	/* make for map in gram struct */
 	gram.Symb2NTerminal = make(map[string]NonTerminal, len(lines))
+	gram.RhSide2NTSymb = make(map[string][]string, len(lines))
 	
 	/* process each line */ 
 	for idx, l := range lines {
@@ -115,12 +117,12 @@ func ReadGrammar(content string) Grammar {
 			rhSide := getSymbols(opt)
 
 			/* construct RhSide2NTSymb map */
-			strRhSide := strings.Join(rhSide, "")
-			ntSymb, found := gram.RhSide2NTSymb[strRhSide]
+			strRhSide := strings.Join(rhSide, " ")
+			_, found := gram.RhSide2NTSymb[strRhSide]
 			if found {
-				ntSymb = append(ntSymb, strRhSide)
+				gram.RhSide2NTSymb[strRhSide] = append(gram.RhSide2NTSymb[strRhSide], nt.Symbol)
 			} else {
-				ntSymb = []string{strRhSide}
+				gram.RhSide2NTSymb[strRhSide] = []string{nt.Symbol}
 			}
 
 			/* gether rhSides */

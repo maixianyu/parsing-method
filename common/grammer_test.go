@@ -91,7 +91,27 @@ func TestReadGrammar(t *testing.T) {
 					},
 				},
 			},
-		}
+		RhSide2NTSymb: map[string][]string{
+			"Expr + Term": []string{
+				"Expr",
+			},
+			"Term": []string{
+				"Expr",
+			},
+			"Term x Factor": []string{
+				"Term",
+			},
+			"Factor": []string{
+				"Term",
+			},
+			"( Expr )": []string{
+				"Factor",
+			},
+			"i": []string{
+				"Factor",
+			},
+		},
+	}
 	input := "Expr -> Expr + Term | Term\nTerm -> Term x Factor | Factor\nFactor -> ( Expr ) | i"
 	res := ReadGrammar(input)
 	eq := reflect.DeepEqual(expect, res)
@@ -145,7 +165,18 @@ func TestReadGrammar(t *testing.T) {
 					},
 				},
 			},
-		}
+		RhSide2NTSymb: map[string][]string{
+			"L S D": []string{
+				"S",
+			},
+			"": []string{
+				"S", "L",
+			},
+			"d": []string{
+				"D",
+			},
+		},
+	}
 	input = "S -> L S D | epsilon\nL -> epsilon\nD -> d"
 	res = ReadGrammar(input)
 	eq = reflect.DeepEqual(expect, res)
