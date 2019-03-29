@@ -2,7 +2,7 @@ package unger
 
 import (
 	"log"
-	"fmt"
+	//"fmt"
 	. "github.com/maixianyu/parsing-method/common"
 )
 
@@ -41,7 +41,6 @@ func matchNonTerminal(gram Grammar, symb string, input string, erule ERule) ([]s
 	}
 
 	ques := symb + "->" + input
-	fmt.Println(ques)
 	if erule == HasERule {
 		/* search for question symb->input first  */
 		asw, found := cutOff[ques]
@@ -58,11 +57,9 @@ func matchNonTerminal(gram Grammar, symb string, input string, erule ERule) ([]s
 
 	// match every right-hand side
 	trace := []string{}
-	fmt.Printf("begin symb:%s, rhSides:%v, input:%s\n", symb, NTerminal.RHSides, input)
 	for _, rhSide := range NTerminal.RHSides {
 		res, ok := matchRightHandSide(gram, rhSide, input, erule)
 		if ok == true {
-			fmt.Printf("finish symb:%s, rhSide:%v, input:%s, res:%v\n", symb, rhSide, input, ok)
 			trace = append(trace, symb)
 			trace = append(trace, res...)
 			/* update cutOff map*/
@@ -75,7 +72,6 @@ func matchNonTerminal(gram Grammar, symb string, input string, erule ERule) ([]s
 			return trace, true
 		}
 	}
-	fmt.Printf("finish symb:%s, input:%s, res:%v\n", symb, input, false)
 
 	return []string{}, false
 }
@@ -106,7 +102,6 @@ func matchRightHandSide(gram Grammar, rhSide RightHandSide, input string, erule 
 				if matched == true {
 					traces = append(traces, matchTrace)
 				} else {
-					//fmt.Printf("false symb:%s, input:%s\n", s, input)
 					return []string{}, false
 				}
 
