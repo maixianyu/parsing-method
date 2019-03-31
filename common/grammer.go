@@ -128,7 +128,14 @@ func ReadGrammar(content string) Grammar {
 			/* gether rhSides */
 			nt.RHSides = append(nt.RHSides, RightHandSide(rhSide))
 		}
+
 		/* construct Symb2NTerminal map */
+		if _, found := gram.Symb2NTerminal[nt.Symbol]; found {
+			/* support multiple lines on a same non-terminal */
+			rhCopy := make([]RightHandSide, len(gram.Symb2NTerminal[nt.Symbol].RHSides))
+			copy(rhCopy, gram.Symb2NTerminal[nt.Symbol].RHSides)
+			nt.RHSides = append(rhCopy, nt.RHSides...)
+		}
 		gram.Symb2NTerminal[nt.Symbol] = nt
 	}
 

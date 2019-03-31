@@ -9,28 +9,28 @@ use unger-style method to parse input string according to the recognition table;
 
 time complexity: O(n^3)
 
-Test in sample/number, with input "12.34+56":
-    Number ->
-    N1Scale ->
-    IntegerFractionScale ->
-    IntegerDigitFractionScale ->
-    1DigitFractionScale ->
-    12FractionScale ->
-    12T1IntegerScale ->
-    12.IntegerScale ->
-    12.IntegerDigitScale ->
-    12.3DigitScale ->
-    12.34Scale ->
-    12.34N2Integer ->
-    12.34T2SignInteger ->
-    12.34eSignInteger ->
-    12.34e+Integer ->
-    12.34e+IntegerDigit ->
-    12.34e+5Digit ->
-    12.34e+56 ->
+Test in sample/number, with input "12.34+56":<br/>
+    Number -><br/>
+    N1Scale -><br/>
+    IntegerFractionScale -><br/>
+    IntegerDigitFractionScale -><br/>
+    1DigitFractionScale -><br/>
+    12FractionScale -><br/>
+    12T1IntegerScale -><br/>
+    12.IntegerScale -><br/>
+    12.IntegerDigitScale -><br/>
+    12.3DigitScale -><br/>
+    12.34Scale -><br/>
+    12.34N2Integer -><br/>
+    12.34T2SignInteger -><br/>
+    12.34eSignInteger -><br/>
+    12.34e+Integer -><br/>
+    12.34e+IntegerDigit -><br/>
+    12.34e+5Digit -><br/>
+    12.34e+56 -><br/>
 
-Ref:
-Parsing Techniques - A Practical Guide
-Dick Grune and Ceriel J.H. Jacobs
-VU University Amsterdam, Amsterdam, The Netherlands
-Published (2008) by Springer US, ISBN 978-1-4419-1901-4 
+Ref:<br/>
+Parsing Techniques - A Practical Guide<br/>
+Dick Grune and Ceriel J.H. Jacobs<br/>
+VU University Amsterdam, Amsterdam, The Netherlands<br/>
+Published (2008) by Springer US, ISBN 978-1-4419-1901-4<br/>

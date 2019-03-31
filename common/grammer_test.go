@@ -112,7 +112,7 @@ func TestReadGrammar(t *testing.T) {
 			},
 		},
 	}
-	input := "Expr -> Expr + Term | Term\nTerm -> Term x Factor | Factor\nFactor -> ( Expr ) | i"
+	input := "Expr -> Expr + Term | Term\nTerm -> Term x Factor | Factor\nFactor -> ( Expr )\nFactor -> i"
 	res := ReadGrammar(input)
 	eq := reflect.DeepEqual(expect, res)
 	if eq == false {
