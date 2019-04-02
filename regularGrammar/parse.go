@@ -56,7 +56,7 @@ func re2post(re []rune) ([]rune, error) {
 				return nil, errors.New("natom == 0 befor |")
 			}
 			/* for clause. because | is an end symbol */
-			for ; natom > 1; natom-- {
+			for natom--; natom > 0; natom-- {
 				res = append(res, '.')
 			}
 			nalt++
@@ -68,7 +68,7 @@ func re2post(re []rune) ([]rune, error) {
 				return nil, errors.New("natom == 0 before )")
 			}
 			/* for clause. because ) is an end symbol */
-			for ; natom > 1; natom-- {
+			for natom--; natom > 0; natom-- {
 				res = append(res, '.')
 			}
 			for ; nalt > 0; nalt-- {
@@ -94,11 +94,11 @@ func re2post(re []rune) ([]rune, error) {
 		}
 	}
 
-	if len(p) == 0 {
+	if len(p) != 0 {
 		return nil, errors.New("len(p)==0 at end")
 	}
 	/* for clause, because it is going to end. And notice that natom must be 0 */
-	for ; natom > 0; natom-- {
+	for natom--; natom > 0; natom-- {
 		res = append(res, '.')
 	}
 	for ; nalt > 0; nalt-- {
