@@ -107,3 +107,87 @@ func re2post(re []rune) ([]rune, error) {
 	return res, nil
 }
 
+/*
+* Represents an NFA state plus zero or one or two arrows exiting.
+* if c == Match, no arrows out; matching state.
+* If c == Split, unlabeled arrows to out and out1 (if != NULL).
+* If c < 256, labeled arrow with character c to out.
+*/
+
+const (
+	Match int = 256
+	Split int = 257
+)
+
+type State struct {
+	c int
+	out *State
+	out1 *State
+	lastlist int
+}
+
+/* matching state */
+var matchState State = State{ c: Match }
+var nstate int
+
+/* Allocate and initialize State */
+func state(c int, out *State, out1 *State) *State {
+	return &State{
+		c: c,
+		out: out,
+		out1: out1,
+		lastlist: 0,
+	}
+}
+
+/*
+* A partially built NFA without the matching state filled in.
+* Frag.start points at the start state.
+* Frag.out is a list of places that neet to be set to be
+* next state for this fragment.
+*/
+type Ptrlist struct {
+	next *Ptrlist
+	s *State
+}
+
+type Frag struct {
+	start *State
+	out *Ptrlist
+}
+
+/* Initialize Frag struct. */
+func frag(start *State, out *Ptrlist) Frag {
+	return Frag{
+		start: start,
+		out: out,
+	}
+}
+
+/* Create singleton list containing just outp. */
+func listl(outp *State) *Ptrlist {
+	var l *Ptrlist
+	l.s = outp
+	l.next = nil
+	return l
+}
+
+/* Patch the list of states at out to point to start. */
+func patch(l *Ptrlist, s *State) {
+	var next *Ptrlist
+	for ; l != nil; l=next {
+		next = l.next
+		l.s = s
+	}
+}
+
+/* Join the two lists l1 and l2, returning the combination. */
+func append(l1 *Ptrlist, l2 *Ptrlist) *Ptrlist {
+	oldl1 := l1
+	for ; l1.next != nil;  {
+		l1 = l1.next
+	}
+	l1.next = l2
+	return oldl1
+}
+
