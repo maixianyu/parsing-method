@@ -166,10 +166,10 @@ func frag(start *State, out *Ptrlist) Frag {
 
 /* Create singleton list containing just outp. */
 func listl(outp *State) *Ptrlist {
-	var l *Ptrlist
-	l.s = outp
-	l.next = nil
-	return l
+	return &Ptrlist{
+		next: nil,
+		s: outp,
+	}
 }
 
 /* Patch the list of states at out to point to start. */
@@ -182,7 +182,7 @@ func patch(l *Ptrlist, s *State) {
 }
 
 /* Join the two lists l1 and l2, returning the combination. */
-func append(l1 *Ptrlist, l2 *Ptrlist) *Ptrlist {
+func appendList(l1 *Ptrlist, l2 *Ptrlist) *Ptrlist {
 	oldl1 := l1
 	for ; l1.next != nil;  {
 		l1 = l1.next
