@@ -13,6 +13,7 @@ package regularGrammar
 
 import (
 	"errors"
+	"log"
 )
 
 /*
@@ -191,3 +192,140 @@ func appendList(l1 *Ptrlist, l2 *Ptrlist) *Ptrlist {
 	return oldl1
 }
 
+/*
+* Convert postfix regular expression to NFA.
+* Return start state.
+*/
+func post2nfa(postfix []rune) (*State, error) {
+	stack := []Frag{}
+	var e1, e2, e Frag
+	var s *State
+
+	for _, p := range postfix {
+		switch p {
+		case '.':		/* catenate */
+			/* pop stack */
+			e2, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			e1, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			patch(e1.out, e2.start)
+			/* push stack */
+			stack = append(stack, Frag{e1.start, e2.out})
+		case '|':		/* alternate */
+			e2, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			e1, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			s = state(Split, e1.start, e2.start)
+			stack = append(stack, Frag{s, appendList(e1.out, e2.out)})
+		case '?':		/* zero or one */
+			e, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			s = state(Split, e.start, nil)
+			stack = append(stack, Frag{s, appendList(e.out, listl(s.out1))})
+		case '*':
+			e, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			s = state(Split, e.start, nil)
+			patch(e.out, s)
+			stack = append(stack, Frag{s, listl(s.out1)})
+		case '+':
+			e, stack = stack[len(stack)-1], stack[:len(stack)-1]
+			s = state(Split, e.start, nil)
+			patch(e.out, s)
+			stack = append(stack, Frag{e.start, listl(s.out1)})
+		default:
+			s = state(int(p), nil, nil)
+			stack = append(stack, Frag{s, listl(s.out)})
+		}
+	}
+
+	e, stack = stack[len(stack)-1], stack[:len(stack)-1]
+	if len(stack) != 0 {
+		return nil, errors.New("len(stack) != 0 at the end.")
+	}
+	patch(e.out, &matchState)
+	return e.start, nil
+}
+
+type List struct {
+	s []*State
+}
+
+var listid int = 0
+
+/* Add s to 1, following unlabeled arrows. */
+func addstate(l *List, s *State) {
+	if s == nil || s.lastlist == listid {
+		return 
+	}
+	s.lastlist = listid
+	if s.c == Split {
+		addstate(l, s.out)
+		addstate(l, s.out1)
+		return
+	}
+	l.s = append(l.s, s)
+}
+
+/* Compute initial state list */
+func startlist(start *State, l *List) *List {
+	listid++
+	addstate(l, start)
+	return l
+}
+
+/* Check whether state list contains a match */
+func ismatch(l *List) bool {
+	for _, s := range l.s {
+		if s == &matchState {
+			return true
+		}
+	}
+	return false
+}
+
+/*
+* Step the NFA from the states in clist
+* past the character c,
+* to create next NFA state set nlist.
+*/
+func step(clist *List, c int, nlist *List) {
+	listid++
+	/* clear nlist */
+	nlist.s = nlist.s[0:0]
+	/* transfer state */
+	for _, s := range clist.s {
+		if s.c == c {
+			/* out is for c matched, out1 is for pass */
+			addstate(nlist, s.out)
+		}
+	}
+}
+
+var l1, l2 List = List{ []*State{} }, List{ []*State{} }
+
+/* Run NFA to determine whether it matches s. */
+func match(start *State, input []rune) bool {
+	clist := startlist(start, &l1)
+	nlist := &l2
+	for c := range input {
+		step(clist, c, nlist)
+		clist, nlist = nlist, clist
+	}
+	return ismatch(clist)
+}
+
+/* parse string */
+func parse(regexp string, input []string) []string {
+	res := []string{}
+	post, err := re2post([]rune(regexp))
+	if err != nil {
+		log.Fatal(err)
+	}
+	start, err := post2nfa(post)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, s := range input {
+		if match(start, []rune(s)) {
+			res = append(res, s)
+		}
+	}
+	return res
+}
