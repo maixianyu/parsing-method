@@ -149,7 +149,7 @@ func state(c int, out *State, out1 *State) *State {
 */
 type Ptrlist struct {
 	next *Ptrlist
-	s *State
+	s **State
 }
 
 type Frag struct {
@@ -166,7 +166,10 @@ func frag(start *State, out *Ptrlist) Frag {
 }
 
 /* Create singleton list containing just outp. */
-func listl(outp *State) *Ptrlist {
+func listl(outp **State) *Ptrlist {
+	if outp == nil {
+		log.Fatal("outp cannot be nil.")
+	}
 	return &Ptrlist{
 		next: nil,
 		s: outp,
@@ -178,7 +181,7 @@ func patch(l *Ptrlist, s *State) {
 	var next *Ptrlist
 	for ; l != nil; l=next {
 		next = l.next
-		l.s = s
+		*l.s = s
 	}
 }
 
@@ -218,20 +221,20 @@ func post2nfa(postfix []rune) (*State, error) {
 		case '?':		/* zero or one */
 			e, stack = stack[len(stack)-1], stack[:len(stack)-1]
 			s = state(Split, e.start, nil)
-			stack = append(stack, Frag{s, appendList(e.out, listl(s.out1))})
+			stack = append(stack, Frag{s, appendList(e.out, listl(&s.out1))})
 		case '*':
 			e, stack = stack[len(stack)-1], stack[:len(stack)-1]
 			s = state(Split, e.start, nil)
 			patch(e.out, s)
-			stack = append(stack, Frag{s, listl(s.out1)})
+			stack = append(stack, Frag{s, listl(&s.out1)})
 		case '+':
 			e, stack = stack[len(stack)-1], stack[:len(stack)-1]
 			s = state(Split, e.start, nil)
 			patch(e.out, s)
-			stack = append(stack, Frag{e.start, listl(s.out1)})
+			stack = append(stack, Frag{e.start, listl(&s.out1)})
 		default:
 			s = state(int(p), nil, nil)
-			stack = append(stack, Frag{s, listl(s.out)})
+			stack = append(stack, Frag{s, listl(&s.out)})
 		}
 	}
 
@@ -266,6 +269,7 @@ func addstate(l *List, s *State) {
 /* Compute initial state list */
 func startlist(start *State, l *List) *List {
 	listid++
+	l.s = l.s[0:0]
 	addstate(l, start)
 	return l
 }
@@ -304,8 +308,8 @@ var l1, l2 List = List{ []*State{} }, List{ []*State{} }
 func match(start *State, input []rune) bool {
 	clist := startlist(start, &l1)
 	nlist := &l2
-	for c := range input {
-		step(clist, c, nlist)
+	for _, c := range input {
+		step(clist, int(c), nlist)
 		clist, nlist = nlist, clist
 	}
 	return ismatch(clist)
@@ -323,7 +327,7 @@ func parse(regexp string, input []string) []string {
 		log.Fatal(err)
 	}
 	for _, s := range input {
-		if match(start, []rune(s)) {
+		if match(start, []rune(s)) == true {
 			res = append(res, s)
 		}
 	}
