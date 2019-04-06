@@ -1,8 +1,8 @@
 package regularGrammar
 
 import (
-	"testing"
 	"strings"
+	"testing"
 )
 
 func repeatedString(rep string, N int) string {
@@ -22,16 +22,17 @@ func benchParse(textSize int, b *testing.B) {
 }
 
 var textSize int
+
 func BenchmarkParse(b *testing.B) {
 	i := textSize
 	benchParse(i, b)
 }
 
-func TestPerformance(t *testing.T){
+func TestPerformance(t *testing.T) {
 	for i := 1; i <= 10; i++ {
 		textSize = i * 10
 		res := testing.Benchmark(BenchmarkParse)
-		t.Logf("textSize=%d\n", textSize)	
-		t.Log(res)	
+		t.Logf("textSize=%d\n", textSize)
+		t.Log(res)
 	}
 }

@@ -1,8 +1,8 @@
 package regularGrammar
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func TestRe2post(t *testing.T) {
@@ -27,14 +27,13 @@ func TestRe2post(t *testing.T) {
 	}
 }
 
-
 func TestList(t *testing.T) {
 	/* test state creation */
 	s1 := state(1, nil, nil)
 	expect := State{
-		c: 1,
-		out: nil,
-		out1: nil,
+		c:        1,
+		out:      nil,
+		out1:     nil,
 		lastlist: 0,
 	}
 	if reflect.DeepEqual(*s1, expect) == false {
@@ -45,7 +44,7 @@ func TestList(t *testing.T) {
 	l1 := listl(&s1)
 	expectList := Ptrlist{
 		next: nil,
-		s: &s1,
+		s:    &s1,
 	}
 	if reflect.DeepEqual(*l1, expectList) == false {
 		t.Fatalf("want:%v, got:%v", *l1, expectList)
@@ -58,7 +57,7 @@ func TestList(t *testing.T) {
 	expectList = *l1
 	expectList.next = &Ptrlist{
 		next: nil,
-		s: &s1,
+		s:    &s1,
 	}
 	if reflect.DeepEqual(*l1, expectList) == false {
 		t.Fatalf("want:%v, got:%v", *l1, expectList)

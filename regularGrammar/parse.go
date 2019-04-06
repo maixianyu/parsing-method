@@ -7,7 +7,7 @@
 * See also http://swtch.com/~rsc/regexp/ and
 * Thompson, Ken.  Regular Expression Search Algorithm,
 * Communications of the ACM 11(6) (June 1968), pp. 419-422.
-*/
+ */
 
 package regularGrammar
 
@@ -21,11 +21,11 @@ import (
 * Insert . as explicit concatenation operator.
 * Similar rules in conversion can be viewd in:
 * http://csis.pace.edu/~wolf/CS122/infix-postfix.htm
-*/
+ */
 
 /* a struct to record nalt and natom in a pair of parentheses */
 type paren struct {
-	nalt int
+	nalt  int
 	natom int
 }
 
@@ -46,8 +46,8 @@ func re2post(re []rune) ([]rune, error) {
 				res = append(res, '.')
 			}
 			/* push current context */
-			curP := paren {
-				nalt: nalt,
+			curP := paren{
+				nalt:  nalt,
 				natom: natom,
 			}
 			p = append(p, curP)
@@ -113,7 +113,7 @@ func re2post(re []rune) ([]rune, error) {
 * if c == Match, no arrows out; matching state.
 * If c == Split, unlabeled arrows to out and out1 (if != NULL).
 * If c < 256, labeled arrow with character c to out.
-*/
+ */
 
 const (
 	Match int = 256
@@ -121,22 +121,22 @@ const (
 )
 
 type State struct {
-	c int
-	out *State
-	out1 *State
+	c        int
+	out      *State
+	out1     *State
 	lastlist int
 }
 
 /* matching state */
-var matchState State = State{ c: Match }
+var matchState State = State{c: Match}
 var nstate int
 
 /* Allocate and initialize State */
 func state(c int, out *State, out1 *State) *State {
 	return &State{
-		c: c,
-		out: out,
-		out1: out1,
+		c:        c,
+		out:      out,
+		out1:     out1,
 		lastlist: 0,
 	}
 }
@@ -146,22 +146,22 @@ func state(c int, out *State, out1 *State) *State {
 * Frag.start points at the start state.
 * Frag.out is a list of places that neet to be set to be
 * next state for this fragment.
-*/
+ */
 type Ptrlist struct {
 	next *Ptrlist
-	s **State
+	s    **State
 }
 
 type Frag struct {
 	start *State
-	out *Ptrlist
+	out   *Ptrlist
 }
 
 /* Initialize Frag struct. */
 func frag(start *State, out *Ptrlist) Frag {
 	return Frag{
 		start: start,
-		out: out,
+		out:   out,
 	}
 }
 
@@ -172,14 +172,14 @@ func listl(outp **State) *Ptrlist {
 	}
 	return &Ptrlist{
 		next: nil,
-		s: outp,
+		s:    outp,
 	}
 }
 
 /* Patch the list of states at out to point to start. */
 func patch(l *Ptrlist, s *State) {
 	var next *Ptrlist
-	for ; l != nil; l=next {
+	for ; l != nil; l = next {
 		next = l.next
 		*l.s = s
 	}
@@ -188,7 +188,7 @@ func patch(l *Ptrlist, s *State) {
 /* Join the two lists l1 and l2, returning the combination. */
 func appendList(l1 *Ptrlist, l2 *Ptrlist) *Ptrlist {
 	oldl1 := l1
-	for ; l1.next != nil;  {
+	for l1.next != nil {
 		l1 = l1.next
 	}
 	l1.next = l2
@@ -198,7 +198,7 @@ func appendList(l1 *Ptrlist, l2 *Ptrlist) *Ptrlist {
 /*
 * Convert postfix regular expression to NFA.
 * Return start state.
-*/
+ */
 func post2nfa(postfix []rune) (*State, error) {
 	stack := []Frag{}
 	var e1, e2, e Frag
@@ -206,19 +206,19 @@ func post2nfa(postfix []rune) (*State, error) {
 
 	for _, p := range postfix {
 		switch p {
-		case '.':		/* catenate */
+		case '.': /* catenate */
 			/* pop stack */
 			e2, stack = stack[len(stack)-1], stack[:len(stack)-1]
 			e1, stack = stack[len(stack)-1], stack[:len(stack)-1]
 			patch(e1.out, e2.start)
 			/* push stack */
 			stack = append(stack, Frag{e1.start, e2.out})
-		case '|':		/* alternate */
+		case '|': /* alternate */
 			e2, stack = stack[len(stack)-1], stack[:len(stack)-1]
 			e1, stack = stack[len(stack)-1], stack[:len(stack)-1]
 			s = state(Split, e1.start, e2.start)
 			stack = append(stack, Frag{s, appendList(e1.out, e2.out)})
-		case '?':		/* zero or one */
+		case '?': /* zero or one */
 			e, stack = stack[len(stack)-1], stack[:len(stack)-1]
 			s = state(Split, e.start, nil)
 			stack = append(stack, Frag{s, appendList(e.out, listl(&s.out1))})
@@ -255,7 +255,7 @@ var listid int = 0
 /* Add s to 1, following unlabeled arrows. */
 func addstate(l *List, s *State) {
 	if s == nil || s.lastlist == listid {
-		return 
+		return
 	}
 	s.lastlist = listid
 	if s.c == Split {
@@ -288,7 +288,7 @@ func ismatch(l *List) bool {
 * Step the NFA from the states in clist
 * past the character c,
 * to create next NFA state set nlist.
-*/
+ */
 func step(clist *List, c int, nlist *List) {
 	listid++
 	/* clear nlist */
@@ -302,7 +302,7 @@ func step(clist *List, c int, nlist *List) {
 	}
 }
 
-var l1, l2 List = List{ []*State{} }, List{ []*State{} }
+var l1, l2 List = List{[]*State{}}, List{[]*State{}}
 
 /* Run NFA to determine whether it matches s. */
 func match(start *State, input []rune) bool {
