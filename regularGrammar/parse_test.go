@@ -87,7 +87,7 @@ func TestNFA(t *testing.T) {
 func TestParse(t *testing.T) {
 	regexp := "a"
 	input := []string{"a", "b", "aa"}
-	res := parse(regexp, input)
+	res := ParseNFA(regexp, input)
 	expect := []string{"a"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -96,7 +96,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a+"
 	input = []string{"a", "b", "aa"}
-	res = parse(regexp, input)
+	res = ParseNFA(regexp, input)
 	expect = []string{"a", "aa"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -105,7 +105,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a?"
 	input = []string{"a", "b", "aa"}
-	res = parse(regexp, input)
+	res = ParseNFA(regexp, input)
 	expect = []string{"a"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -114,7 +114,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a*"
 	input = []string{"a", "b", "aaaaa"}
-	res = parse(regexp, input)
+	res = ParseNFA(regexp, input)
 	expect = []string{"a", "aaaaa"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -123,7 +123,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a(b|c)*"
 	input = []string{"a", "aab", "aacbcaaaa"}
-	res = parse(regexp, input)
+	res = ParseNFA(regexp, input)
 	expect = []string{"a"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -132,7 +132,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a (cat|dog|mouse)+ to (go)* (home)?"
 	input = []string{"a", "a cat", "a catdog to ", "a catdog to gogo ", "a catdog to go home"}
-	res = parse(regexp, input)
+	res = ParseNFA(regexp, input)
 	expect = []string{"a catdog to gogo ", "a catdog to go home"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)

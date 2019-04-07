@@ -15,6 +15,7 @@ package regularGrammar
 
 import (
 	"fmt"
+	"log"
 	"sort"
 )
 
@@ -78,4 +79,48 @@ func dstate(l *List) *DState {
 	copy(d.l.s, l.s)
 	*dp = d
 	return d
+}
+
+func startDState(start *State) *DState {
+	return dstate(startlist(start, &l1))
+}
+
+func nextDState(d *DState, c int) *DState {
+	step(&d.l, c, &l1)
+	d.next[c] = dstate(&l1)
+	return d.next[c]
+}
+
+func matchDState(start *DState, input []rune) bool {
+	d := start
+	for _, c := range input {
+		next := d.next[int(c)]
+		if next == nil {
+			next = nextDState(d, int(c))
+		}
+		d = next
+	}
+	return ismatch(&d.l)
+}
+
+/* parse string in DFA style */
+func ParseDFA(regexp string, input []string) []string {
+	res := []string{}
+	/* re2post */
+	post, err := re2post([]rune(regexp))
+	if err != nil {
+		log.Fatal(err)
+	}
+	/* post2nfa */
+	start, err := post2nfa(post)
+	if err != nil {
+		log.Fatal(err)
+	}
+	/* parse */
+	for _, s := range input {
+		if matchDState(startDState(start), []rune(s)) == true {
+			res = append(res, s)
+		}
+	}
+	return res
 }

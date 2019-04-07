@@ -315,8 +315,8 @@ func match(start *State, input []rune) bool {
 	return ismatch(clist)
 }
 
-/* parse string */
-func parse(regexp string, input []string) []string {
+/* parse string in NFA style */
+func ParseNFA(regexp string, input []string) []string {
 	res := []string{}
 	post, err := re2post([]rune(regexp))
 	if err != nil {

@@ -17,7 +17,7 @@ func benchParse(textSize int, b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		regexp := repeatedString("a?", textSize) + repeatedString("a", textSize)
 		input := repeatedString("a", textSize)
-		parse(regexp, []string{input})
+		ParseNFA(regexp, []string{input})
 	}
 }
 
