@@ -15,7 +15,6 @@ package regularGrammar
 
 import (
 	"log"
-	"sort"
 )
 
 /*
@@ -28,55 +27,26 @@ type DState struct {
 	right *DState
 }
 
-/*
-* Compare lists: first by length, then by members.
-*/
-func listcomp(l1 *List, l2 *List) int {
-	len1, len2 := l1.numS, l2.numS
-	if len1 > len2 {
-		return 1
-	}
-	if len1 < len2 {
-		return -1
-	}
 
-	for idx := range l1.s {
-		// is there another way without fmt ?
-		p1 := l1.s[idx].stateIdx
-		p2 := l2.s[idx].stateIdx
-		if p1 < p2 {
-			return -1
-		} else if p1 > p2 {
-			return 1
-		}
-	}
-	return 0
-}
-
-var allDState *DState
+var allDState map[string]*DState
 /* Return the cached DState for list l, creating a new one if needed. */
 func dstate(l *List) *DState {
-	sort.SliceStable(l.s,
-		func(i, j int) bool {
-			return l.s[i].stateIdx < l.s[j].stateIdx
-		})
-
-	dp := &allDState
-	d := *dp
-	for ;d != nil; d = *dp {
-		i := listcomp(l, &d.l)
-		if i < 0 {
-			dp = &d.left
-		} else if i > 0 {
-			dp = &d.right
-		} else {
-			return d
-		}
+	fingerPrint := 0
+	for idx := 0; idx < len(l.s); idx = idx + 2 {
+		fingerPrint += l.s[idx].stateIdx << 3
 	}
-	d = new(DState)
+	for idx := 1; idx < len(l.s); idx = idx + 2 {
+		fingerPrint += l.s[idx].stateIdx
+	}
+	k := string(fingerPrint)
+
+	if ds, found := allDState[k]; found {
+		return ds
+	}
+
+	d := new(DState)
 	d.l.s = make([]*State, len(l.s))
 	copy(d.l.s, l.s)
-	*dp = d
 	return d
 }
 
