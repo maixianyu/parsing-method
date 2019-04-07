@@ -35,6 +35,7 @@ func TestList(t *testing.T) {
 		out:      nil,
 		out1:     nil,
 		lastlist: 0,
+		stateIdx: 1,
 	}
 	if reflect.DeepEqual(*s1, expect) == false {
 		t.Fatalf("want:%v, got:%v", *s1, expect)

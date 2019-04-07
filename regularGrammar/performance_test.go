@@ -33,9 +33,9 @@ func BenchmarkParse(b *testing.B) {
 func TestPerformance(t *testing.T) {
 	parsefun := [...]func (regexp string, input []string) []string{ ParseDFA, ParseNFA}
 	for _, f := range parsefun {
-		for i := 1; i <= 10; i++ {
+		for i := 1; i <= 1; i++ {
 			parse = f
-			textSize = i * 10
+			textSize = i * 1
 			res := testing.Benchmark(BenchmarkParse)
 			t.Logf("textSize=%d\n", textSize)
 			t.Log(res)

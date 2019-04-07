@@ -14,7 +14,6 @@
 package regularGrammar
 
 import (
-	"fmt"
 	"log"
 	"sort"
 )
@@ -33,18 +32,18 @@ type DState struct {
 * Compare lists: first by length, then by members.
 */
 func listcomp(l1 *List, l2 *List) int {
-	if len(l1.s) < len(l2.s) {
-		return -1
-	}
-
-	if len(l1.s) > len(l2.s) {
+	len1, len2 := l1.numS, l2.numS
+	if len1 > len2 {
 		return 1
+	}
+	if len1 < len2 {
+		return -1
 	}
 
 	for idx := range l1.s {
 		// is there another way without fmt ?
-		p1 := fmt.Sprintf("%p", l1.s[idx])
-		p2 := fmt.Sprintf("%p", l2.s[idx])
+		p1 := l1.s[idx].stateIdx
+		p2 := l2.s[idx].stateIdx
 		if p1 < p2 {
 			return -1
 		} else if p1 > p2 {
@@ -59,7 +58,7 @@ var allDState *DState
 func dstate(l *List) *DState {
 	sort.SliceStable(l.s,
 		func(i, j int) bool {
-			return fmt.Sprintf("%p", l.s[i]) < fmt.Sprintf("%p", l.s[j])
+			return l.s[i].stateIdx < l.s[j].stateIdx
 		})
 
 	dp := &allDState

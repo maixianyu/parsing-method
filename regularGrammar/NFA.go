@@ -125,19 +125,22 @@ type State struct {
 	out      *State
 	out1     *State
 	lastlist int
+	stateIdx int
 }
 
 /* matching state */
 var matchState State = State{c: Match}
-var nstate int
+var nstate int = 0
 
 /* Allocate and initialize State */
 func state(c int, out *State, out1 *State) *State {
+	nstate++
 	return &State{
 		c:        c,
 		out:      out,
 		out1:     out1,
 		lastlist: 0,
+		stateIdx: nstate,
 	}
 }
 
@@ -248,6 +251,7 @@ func post2nfa(postfix []rune) (*State, error) {
 
 type List struct {
 	s []*State
+	numS int
 }
 
 var listid int = 0
@@ -263,6 +267,7 @@ func addstate(l *List, s *State) {
 		addstate(l, s.out1)
 		return
 	}
+	l.numS++
 	l.s = append(l.s, s)
 }
 
@@ -302,7 +307,7 @@ func step(clist *List, c int, nlist *List) {
 	}
 }
 
-var l1, l2 List = List{[]*State{}}, List{[]*State{}}
+var l1, l2 List = List{[]*State{}, 0}, List{[]*State{}, 0}
 
 /* Run NFA to determine whether it matches s. */
 func match(start *State, input []rune) bool {
