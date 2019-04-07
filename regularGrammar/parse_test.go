@@ -84,10 +84,10 @@ func TestNFA(t *testing.T) {
 
 }
 
-func TestParse(t *testing.T) {
+func testCollection(t *testing.T, parse func (regexp string, input []string) []string) {
 	regexp := "a"
 	input := []string{"a", "b", "aa"}
-	res := ParseNFA(regexp, input)
+	res := parse(regexp, input)
 	expect := []string{"a"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -96,7 +96,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a+"
 	input = []string{"a", "b", "aa"}
-	res = ParseNFA(regexp, input)
+	res = parse(regexp, input)
 	expect = []string{"a", "aa"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -105,7 +105,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a?"
 	input = []string{"a", "b", "aa"}
-	res = ParseNFA(regexp, input)
+	res = parse(regexp, input)
 	expect = []string{"a"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -114,7 +114,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a*"
 	input = []string{"a", "b", "aaaaa"}
-	res = ParseNFA(regexp, input)
+	res = parse(regexp, input)
 	expect = []string{"a", "aaaaa"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -123,7 +123,7 @@ func TestParse(t *testing.T) {
 
 	regexp = "a(b|c)*"
 	input = []string{"a", "aab", "aacbcaaaa"}
-	res = ParseNFA(regexp, input)
+	res = parse(regexp, input)
 	expect = []string{"a"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
@@ -132,10 +132,17 @@ func TestParse(t *testing.T) {
 
 	regexp = "a (cat|dog|mouse)+ to (go)* (home)?"
 	input = []string{"a", "a cat", "a catdog to ", "a catdog to gogo ", "a catdog to go home"}
-	res = ParseNFA(regexp, input)
+	res = parse(regexp, input)
 	expect = []string{"a catdog to gogo ", "a catdog to go home"}
 	if reflect.DeepEqual(res, expect) == false {
 		t.Fatalf("want:%v, got:%v", expect, res)
 	}
 	t.Log(res)
+}
+
+func TestParse(t *testing.T) {
+	t.Log("ParseNFA")
+	testCollection(t, ParseNFA)
+	t.Log("ParseDFA")
+	testCollection(t, ParseDFA)
 }
