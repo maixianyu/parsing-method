@@ -131,6 +131,15 @@ func testCollection(t *testing.T, parse func (regexp string, input []string) []s
 	}
 	t.Log(res)
 
+	regexp = "a (cat|dog|mouse)* in (home)?"
+	input = []string{"a", "a cat", "a catdog to ", "a catdog to gogo", "a catdog in home"}
+	res = parse(regexp, input)
+	expect = []string{"a catdog in home"}
+	if reflect.DeepEqual(res, expect) == false {
+		t.Fatalf("want:%v, got:%v", expect, res)
+	}
+	t.Log(res)
+
 	regexp = "a (cat|dog|mouse)+ to (go)* (home)?"
 	input = []string{"a", "a cat", "a catdog to ", "a catdog to gogo ", "a catdog to go home"}
 	res = parse(regexp, input)

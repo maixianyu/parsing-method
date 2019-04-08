@@ -27,26 +27,50 @@ type DState struct {
 	right *DState
 }
 
+func listcomp(l1 *List, l2 *List) bool {
+	equal := true
+	for idx := range l1.s {
+		equal = equal && (l1.s[idx].stateIdx == l2.s[idx].stateIdx)
+	}
+	return equal
+}
 
-var allDState map[string]*DState
+func fingerPrint(l *List) int {
+	res := len(l.s)
+	for idx := range l.s {
+		res += l.s[idx].stateIdx
+		return res
+	}
+	return res
+}
+
 /* Return the cached DState for list l, creating a new one if needed. */
+var allDState *DState
 func dstate(l *List) *DState {
-	fingerPrint := 0
-	for idx := 0; idx < len(l.s); idx = idx + 2 {
-		fingerPrint += l.s[idx].stateIdx << 3
+	dp := &allDState
+	finIn := fingerPrint(l)
+	for *dp != nil {
+		finDP := fingerPrint(&(*dp).l)
+		if finIn < finDP {
+			dp = &(*dp).left
+		} else if finIn > finDP {
+			dp = &(*dp).right
+		} else {
+			if (listcomp(l, &(*dp).l)) {
+				return *dp
+			} else {
+				d := new(DState)
+				d.l.s = make([]*State, len(l.s), len(l.s))
+				copy(d.l.s, l.s)
+				*dp = d
+				return d
+			}
+		}
 	}
-	for idx := 1; idx < len(l.s); idx = idx + 2 {
-		fingerPrint += l.s[idx].stateIdx
-	}
-	k := string(fingerPrint)
-
-	if ds, found := allDState[k]; found {
-		return ds
-	}
-
 	d := new(DState)
-	d.l.s = make([]*State, len(l.s))
+	d.l.s = make([]*State, len(l.s), len(l.s))
 	copy(d.l.s, l.s)
+	*dp = d
 	return d
 }
 
@@ -81,6 +105,8 @@ func ParseDFA(regexp string, input []string) []string {
 		log.Fatal(err)
 	}
 	/* post2nfa */
+	nstate = 0
+	allDState = nil
 	start, err := post2nfa(post)
 	if err != nil {
 		log.Fatal(err)

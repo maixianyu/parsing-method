@@ -305,6 +305,9 @@ func step(clist *List, c int, nlist *List) {
 			addstate(nlist, s.out)
 		}
 	}
+	if len(nlist.s) == 0 {
+		log.Printf("%c", rune(c))
+	}
 }
 
 var l1, l2 List = List{[]*State{}, 0}, List{[]*State{}, 0}
