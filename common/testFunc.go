@@ -2,7 +2,14 @@ package common
 
 import(
 	"fmt"
+	"runtime"
+	"reflect"
 )
+
+/*get name of funtion i*/
+func GetFunctionName(i interface{}) string {
+    return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
+}
 
 /* a function to compare []string */
 func StringSliceEqual(s1 []string, s2 []string) bool {
