@@ -7,7 +7,7 @@ https://swtch.com/~rsc/regexp/regexp1.html<br/>
 This blog makes a very explict comment on the theory and implementation in C.<br/>
 
 <br/>
-### testcase1
+###testcase1
 <br/>regexp: (a?)^na^n
 <br/>input: a^n
 <br/>command: go test DFA.go NFA.go performance_test.go -v
@@ -37,7 +37,7 @@ This blog makes a very explict comment on the theory and implementation in C.<br
 <br/>performance_test.go:50: 30000 43636 ns/op
 
 <br/>
-### testcase2
+###testcase2
 <br/>regexp: 0(a|b|c|d|...|z)1
 <br/>input: 0abcdabcdabcda...abcd1
 <br/>command: go test DFA.go NFA.go performance_test.go -v
