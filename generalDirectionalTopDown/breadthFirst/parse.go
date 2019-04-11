@@ -3,7 +3,6 @@ package breadthFirst
 import(
 	"container/list"
 	"strings"
-
 	"github.com/maixianyu/parsing-method/common"
 )
 
@@ -11,7 +10,7 @@ func predict(analysis, prediction *list.List, sym2nt map[string]common.NonTermin
 	remaining := false
 	// ep for element of predition stack
 	// ea for element of analysis stack
-	for ep, ea := prediction.Front(), analysis.Front(); ep != nil; ep, ea = ep.Next(), ea.Next() {
+	for ep, ea := prediction.Front(), analysis.Front(); ep != nil && ea != nil; ep, ea = ep.Next(), ea.Next() {
 		pStack := ep.Value.([]string)
 		if nt, found := sym2nt[pStack[0]]; found {
 			remaining = true
@@ -20,13 +19,13 @@ func predict(analysis, prediction *list.List, sym2nt map[string]common.NonTermin
 			aStack := ea.Value.([]string)
 			for _, rh := range rhSides {
 				// move non-terminal from prediction stack to analysis stack
-				ntStack := []string{}
+				ntStack := make([]string, len(aStack))
 				copy(ntStack, aStack)
 				ntStack = append(ntStack, nt.Symbol)
 				analysis.InsertBefore(ntStack, ea)
 
 				// push each rh to prediction stack
-				rhStack := []string{}
+				rhStack := make([]string, len(pStack))
 				copy(rhStack, pStack)
 				rhStack = append(rh, pStack[1:]...)
 				prediction.InsertBefore(rhStack, ep)
@@ -35,7 +34,7 @@ func predict(analysis, prediction *list.List, sym2nt map[string]common.NonTermin
 			// remove original stack in analysis/prediction List
 			markA, markP := ea.Prev(), ep.Prev()
 			analysis.Remove(ea)
-			analysis.Remove(ep)
+			prediction.Remove(ep)
 			ea, ep = markA, markP
 
 		}
