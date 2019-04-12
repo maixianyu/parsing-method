@@ -9,10 +9,13 @@ import (
 
 func listComp(t *testing.T, expect [][]string, l *list.List) {
 	for i, e := 0, l.Front(); e != nil; i, e = i+1, e.Next() {
-		ana := e.Value.([]string)
-		for j, symb := range ana {
-			if symb != expect[i][j] {
-				t.Errorf("symb want:%v, got:%v", expect[i][j], symb)
+		stack := e.Value.([]string)
+		if len(expect[i]) != len(stack) {
+			t.Fatalf("expect[i] is %v, stack is %v, len unequal! i=%d", expect[i], stack, i)
+		}
+		for j := range expect[i] {
+			if stack[j] != expect[i][j] {
+				t.Errorf("symb want:%v, got:%v", expect[i][j], stack[j])
 			}
 		}
 	}
@@ -73,22 +76,13 @@ func TestMatch(t *testing.T) {
 
 	// predict first
 	t.Log("begin predict")
-	res := false
-	for res != true {
-		res = predict(analysis, prediction, gram.Symb2NTerminal)
-	}
-	if res == false {
-		t.Fatalf("res want:%v, got:%v", true, res)
-	}
+	for predict(analysis, prediction, gram.Symb2NTerminal) == false {}
 
 	// match
 	t.Log("begin match")
 	fmt.Println("begin match")
 	matched, rest := []string{}, []string{"a", "a", "b", "c"}
-	res = false
-	for res != true {
-		res = match(&matched, &rest, analysis, prediction, gram.Symb2NTerminal)
-	}
+	for match(&matched, &rest, analysis, prediction, gram.Symb2NTerminal) == false { }
 
 	fmt.Println("begin compare")
 	// compare matched
@@ -122,4 +116,19 @@ func TestMatch(t *testing.T) {
 		[]string{"D", "b", "C"},
 	}
 	listComp(t, expect, prediction)
+}
+
+func TestParse(t *testing.T) {
+	fpath := "../../samples/GreibachNormalForm"
+	gram := common.ReadGrammarFromFile(fpath)
+	input := "a a b c"
+	res, err := parse(gram, input)
+	if err != nil {
+		t.Log(err)
+	}
+	expectStr := []string{"S", "A", "a", "A", "a", "B", "b", "c", "#"}
+	if common.StringSliceEqual(res, expectStr) == false {
+		t.Errorf("rest want:%v, got:%v", expectStr, res)
+	}
+
 }

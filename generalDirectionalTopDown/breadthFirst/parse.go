@@ -3,6 +3,8 @@ package breadthFirst
 import(
 	"container/list"
 	"strings"
+	"errors"
+	"fmt"
 	"github.com/maixianyu/parsing-method/common"
 )
 
@@ -65,14 +67,13 @@ func match(matched, rest *[]string, analysis, prediction *list.List, sym2nt map[
 		pStack := ep.Value.([]string)
 		if pStack[0] != (*rest)[0] {
 			// mismatch: remove stack
-			markA, markP := ep, ea
+			markA, markP := ea, ep
 			ep, ea = ep.Next(), ea.Next()
 			analysis.Remove(markA)
 			prediction.Remove(markP)
 		} else {
 			// match: move symbol from prediction to analysis
-			aStack := ea.Value.([]string)
-			aStack = append(aStack, pStack[0])
+			ea.Value = append(ea.Value.([]string), pStack[0])
 			ep.Value = pStack[1:]
 			ep, ea = ep.Next(), ea.Next()
 		}
@@ -89,7 +90,7 @@ func match(matched, rest *[]string, analysis, prediction *list.List, sym2nt map[
 	return ready
 }
 
-func parse(gram common.Grammar, input string) ([]string, bool) {
+func parse(gram common.Grammar, input string) ([]string, error) {
 	split := strings.Split(input, " ")
 	split = append(split, "#")
 	rest := []string{}
@@ -109,9 +110,21 @@ func parse(gram common.Grammar, input string) ([]string, bool) {
 	analysis.PushFront(anaStack)
 
 	for len(rest) != 0 {
-		for predict(analysis, prediction, gram.Symb2NTerminal) == true {}
-		for match(&matched, &rest, analysis, prediction, gram.Symb2NTerminal) == true {}
+		for predict(analysis, prediction, gram.Symb2NTerminal) == false {}
+		for match(&matched, &rest, analysis, prediction, gram.Symb2NTerminal) == false {}
 	}
 
-	return analysis.Front().Value.([]string), analysis.Len() > 0
+	var err error
+	if analysis.Len() == 0 {
+		info := "fail to parse " + input
+		err = errors.New(info)
+	}
+
+	return analysis.Front().Value.([]string), err
+}
+
+func printList(l1 *list.List, l2 *list.List) {
+	for e1, e2 := l1.Front(), l2.Front(); e1 != nil && e2 != nil; e1, e2 = e1.Next(), e2.Next() {
+		fmt.Printf("e1:%v, e2:%v\n", e1.Value, e2.Value)
+	}
 }
