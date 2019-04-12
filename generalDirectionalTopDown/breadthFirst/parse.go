@@ -7,13 +7,13 @@ import(
 )
 
 func predict(analysis, prediction *list.List, sym2nt map[string]common.NonTerminal) bool {
-	remaining := false
+	noNonterminal := true
 	// ep for element of predition stack
 	// ea for element of analysis stack
 	for ep, ea := prediction.Front(), analysis.Front(); ep != nil && ea != nil; ep, ea = ep.Next(), ea.Next() {
 		pStack := ep.Value.([]string)
 		if nt, found := sym2nt[pStack[0]]; found {
-			remaining = true
+			noNonterminal = false
 			// nt to r-h sides
 			rhSides := nt.RHSides
 			aStack := ea.Value.([]string)
@@ -39,21 +39,30 @@ func predict(analysis, prediction *list.List, sym2nt map[string]common.NonTermin
 
 		}
 	}
-	return remaining
+	return noNonterminal
 }
 
 func match(matched, rest *[]string, analysis, prediction *list.List, sym2nt map[string]common.NonTerminal) bool {
 	if len(*rest) == 0 {
-		return false
+		return true
 	}
 
-	remaining := true
+	// ready to predict
+	ready := false
+
+	// test if all symbols are teminals
+	for ep := prediction.Front(); ep != nil; ep = ep.Next() {
+		pStack := ep.Value.([]string)
+		_, found := sym2nt[pStack[0]]
+		ready = ready || found
+	}
+	if ready == true {
+		return ready
+	}
 
 	// remove mismatch stack
 	for ep, ea := prediction.Front(), analysis.Front(); ep != nil; {
 		pStack := ep.Value.([]string)
-		_, found := sym2nt[pStack[0]]
-		remaining = remaining && found
 		if pStack[0] != (*rest)[0] {
 			// mismatch: remove stack
 			markA, markP := ep, ea
@@ -64,7 +73,7 @@ func match(matched, rest *[]string, analysis, prediction *list.List, sym2nt map[
 			// match: move symbol from prediction to analysis
 			aStack := ea.Value.([]string)
 			aStack = append(aStack, pStack[0])
-			ea.Value = pStack[1:]
+			ep.Value = pStack[1:]
 			ep, ea = ep.Next(), ea.Next()
 		}
 	}
@@ -77,7 +86,7 @@ func match(matched, rest *[]string, analysis, prediction *list.List, sym2nt map[
 		*rest = (*rest)[1:]
 	}
 
-	return remaining
+	return ready
 }
 
 func parse(gram common.Grammar, input string) ([]string, bool) {
