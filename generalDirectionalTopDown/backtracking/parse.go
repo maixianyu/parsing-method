@@ -18,6 +18,7 @@ func depthFirst(matched, rest, analysis, prediction []string, symb2nt map[string
 		return
 	}
 	if len(rest) == 1 && found == false && len(prediction) == 1 && rest[0] == prediction[0] {
+		analysis = append(analysis, rest[0])
 		*res = append(*res, analysis)
 		return
 	} 
@@ -50,7 +51,7 @@ func depthFirst(matched, rest, analysis, prediction []string, symb2nt map[string
 			}
 			newMch := append(matched, rest[0])
 			newAly := append(analysis, rest[0])
-			depthFirst(newMch, newAly, newAly, newPred, symb2nt, res)
+			depthFirst(newMch, newRest, newAly, newPred, symb2nt, res)
 
 		// mismatched
 		} else {
