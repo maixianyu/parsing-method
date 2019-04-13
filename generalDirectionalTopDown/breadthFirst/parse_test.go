@@ -129,6 +129,8 @@ func TestParse(t *testing.T) {
 	expectStr := []string{"S", "A", "a", "A", "a", "B", "b", "c", "#"}
 	if common.StringSliceEqual(res, expectStr) == false {
 		t.Errorf("rest want:%v, got:%v", expectStr, res)
+	} else {
+		t.Log(res)
 	}
 
 }

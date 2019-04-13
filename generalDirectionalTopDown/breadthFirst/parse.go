@@ -21,13 +21,13 @@ func predict(analysis, prediction *list.List, sym2nt map[string]common.NonTermin
 			aStack := ea.Value.([]string)
 			for _, rh := range rhSides {
 				// move non-terminal from prediction stack to analysis stack
-				ntStack := make([]string, len(aStack))
+				ntStack := make([]string, len(aStack), 2 * len(aStack))
 				copy(ntStack, aStack)
 				ntStack = append(ntStack, nt.Symbol)
 				analysis.InsertBefore(ntStack, ea)
 
 				// push each rh to prediction stack
-				rhStack := make([]string, len(pStack))
+				rhStack := make([]string, len(pStack), 2 * len(pStack))
 				copy(rhStack, pStack)
 				rhStack = append(rh, pStack[1:]...)
 				prediction.InsertBefore(rhStack, ep)
