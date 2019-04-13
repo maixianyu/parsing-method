@@ -8,6 +8,9 @@ import(
 	"github.com/maixianyu/parsing-method/common"
 )
 
+// notations below are explained in Parsing Technique
+// analysis: a stack, used to record parsing result
+// prediction: a stack, used to predict parsing
 func predict(analysis, prediction *list.List, sym2nt map[string]common.NonTerminal) bool {
 	noNonterminal := true
 	// ep for element of predition stack
@@ -44,6 +47,12 @@ func predict(analysis, prediction *list.List, sym2nt map[string]common.NonTermin
 	return noNonterminal
 }
 
+// notations below are explained in Parsing Technique
+// input = matched + rest
+// matched: matched parts of input
+// rest: parts of input, about to be matched
+// analysis: a linked list consisting some stacks, used to record parsing result
+// prediction: a linked list consisting some stacks, used to predict parsing
 func match(matched, rest *[]string, analysis, prediction *list.List, sym2nt map[string]common.NonTerminal) bool {
 	if len(*rest) == 0 {
 		return true

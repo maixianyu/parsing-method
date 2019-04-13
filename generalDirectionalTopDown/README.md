@@ -10,6 +10,9 @@ Pushdown automato require grammar to be Greibach Normal Form (GNF) :
 <br/>D -> a b | a D b
 <br/>C -> c | c C
 
+<br/>an example of input:
+<br/>aabc
+
 <br/>breadthFirst method:
 <br/>λ go test parse.go parse_test.go -v
 <br/> parse_test.go:133: [S A a A a B b c #]
