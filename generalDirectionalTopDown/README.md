@@ -13,7 +13,7 @@ Pushdown automato require grammar to be Greibach Normal Form (GNF) :
 <br/>an example of input:
 <br/>aabc
 
-<br/>breadthFirst method:
+###breadthFirst method:
 <br/>λ go test parse.go parse_test.go -v
 <br/> parse_test.go:133: [S A a A a B b c #]
 <br/>
@@ -23,3 +23,16 @@ Pushdown automato require grammar to be Greibach Normal Form (GNF) :
 <br/>    performance_test.go:23:   100000         16337 ns/op
 <br/>PASS
 <br/>ok      command-line-arguments  2.260s
+
+###backtracking method:
+<br/>=== RUN   TestParse
+<br/>--- PASS: TestParse (0.00s)
+<br/>    parse_test.go:133: [S A a A a B b c #]
+<br/>PASS
+<br/>
+<br/>λ go test parse.go performance_test.go -cpuprofile cpu.prof -v
+<br/>=== RUN TestPerformance
+<br/>--- PASS: TestPerformance (1.67s)
+<br/>performance_test.go:23: 300000 5372 ns/op
+<br/>PASS
+<br/>ok command-line-arguments 2.082s
