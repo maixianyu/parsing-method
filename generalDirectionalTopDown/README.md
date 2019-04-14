@@ -13,6 +13,10 @@ Pushdown automato require grammar to be Greibach Normal Form (GNF) :
 <br/>an example of input:
 <br/>aabc
 
+### backtracking
+Backtracking is a property of the parser, not of the implementation.
+Both depthFirst method and recursive descent method are of backtracking.
+
 ###breadthFirst method:
 <br/>λ go test parse.go parse_test.go -v
 <br/> parse_test.go:133: [S A a A a B b c #]
@@ -24,7 +28,7 @@ Pushdown automato require grammar to be Greibach Normal Form (GNF) :
 <br/>PASS
 <br/>ok      command-line-arguments  2.260s
 
-###backtracking method:
+###depthFirst method:
 <br/>=== RUN   TestParse
 <br/>--- PASS: TestParse (0.00s)
 <br/>    parse_test.go:133: [S A a A a B b c #]
