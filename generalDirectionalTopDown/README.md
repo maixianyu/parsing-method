@@ -40,3 +40,19 @@ Both depthFirst method and recursive descent method are of backtracking.
 <br/>performance_test.go:23: 300000 5372 ns/op
 <br/>PASS
 <br/>ok command-line-arguments 2.082s
+
+###recursiveDescent method:
+<br/>λ go test parse.go parse_test.go  -v
+<br/>=== RUN   TestParse
+<br/>--- PASS: TestParse (0.00s)
+<br/>    parse_test.go:16: a a b c [[S -> AB A -> aA A -> a B -> bc]]
+<br/>    parse_test.go:25: a b c c [[S -> DC D -> ab C -> cC C -> c]]
+<br/>PASS
+<br/>ok      command-line-arguments  0.380s
+<br/>
+<br/>λ go test parse.go performance_test.go -v -cpuprofile=cpu.prof
+<br/>=== RUN   TestPerformance
+<br/>--- PASS: TestPerformance (2.14s)
+<br/>    performance_test.go:16:  2000000           733 ns/op
+<br/>PASS
+<br/>ok      command-line-arguments  3.009s
