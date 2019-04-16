@@ -2,7 +2,19 @@ package common
 
 import (
 	//"fmt"
+	"strings"
 )
+
+func SliceInput(input string, sep string) []string {
+	in := strings.Split(input, sep)
+	res := make([]string, 0, len(in))
+	for _, s := range in {
+		if s != "" {
+			res = append(res, s)
+		}
+	}
+	return res
+}
 
 func GeneratePartitions(input string, num int, erule ERule) ([][]string, bool) {
 	inputSlice := []rune(input)

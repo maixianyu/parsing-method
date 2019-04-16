@@ -7,6 +7,7 @@ import(
 
 type item struct {
 	dotPos int
+	// at starting from 1
 	at int
 	nonTerm string
 	rhSide []string
@@ -75,7 +76,7 @@ func (active *subSet) predictor(at int, symb2nt map[string]common.NonTerminal) (
 }
 
 /* scanner looks at symb, goes through an item set, and generate (completed subSet, active subSet) */
-func (its *itemSet) scanner(symb string, symb2nt map[string]common.NonTerminal) (completed subSet, active subSet) {
+func (its *itemSet) scanner(symb string, isNonTerminal bool, symb2nt map[string]common.NonTerminal) (completed subSet, active subSet) {
 	completed, active = []item{}, []item{}
 	/* loop subSet */
 	for i := range *its {
@@ -83,7 +84,7 @@ func (its *itemSet) scanner(symb string, symb2nt map[string]common.NonTerminal) 
 		for _, it := range (*its)[i] {
 			curSymb := it.rhSide[it.dotPos]
 			/* if curSymb is a terminal and equals to symb */
-			if _, found := symb2nt[curSymb]; curSymb == symb && found == false {
+			if _, found := symb2nt[curSymb]; curSymb == symb && found == isNonTerminal {
 				/* curSymb is at tail, then recognized as completed */
 				if it.dotPos == len(it.rhSide) - 1 {
 					completed = append(completed, it)
@@ -95,4 +96,67 @@ func (its *itemSet) scanner(symb string, symb2nt map[string]common.NonTerminal) 
 		}
 	}
 	return
+}
+
+/* completer inspects completed set, which contains the items that have just been recognized and can now 
+*  be reduced.
+*/
+func (completed *subSet) completer(allItemSet []itemSet, symb2nt map[string]common.NonTerminal) (newComp subSet, newActv subSet, err error) {
+	newComp, newActv = []item{}, []item{}
+	for _, it := range *completed {
+		idxSet := it.at
+		if idxSet > len(allItemSet) {
+			return nil, nil, errors.New("idxSet >= len(allItemSet)")
+		}
+		searchSet := allItemSet[idxSet-1]
+		c, a := searchSet.scanner(it.nonTerm, true, symb2nt)
+		newComp = append(newComp, c...)
+		newActv = append(newActv, a...)
+	}
+	return
+}
+
+/* parse */
+func parse(gram common.Grammar, input string) ([]string, error) {
+	in := common.SliceInput(input, " ")
+	// make itemSet0
+	actv0 := initActiveSet(gram)
+	pred0, err := (&actv0).predictor(1, gram.Symb2NTerminal)
+	if err != nil {
+		return nil, err
+	}
+	// make allItemSet
+	allItemSet := make([]itemSet, 0, len(in) + 1)
+	allItemSet = append(allItemSet, itemSet{ actv0, pred0 })
+	// make completed array
+	compArr := make([]subSet, 0, len(in))
+
+	/* goes through input, and construct itemSet */
+	for idx, symb := range in {
+		completed, active := (&allItemSet[idx]).scanner(symb, false, gram.Symb2NTerminal)
+		moreComp, moreActv, err := (&completed).completer(allItemSet, gram.Symb2NTerminal)
+		if err != nil {
+			return nil, err
+		}
+		active = append(active, moreActv...)
+		predict, err := (&active).predictor(idx + 1, gram.Symb2NTerminal)
+		if err != nil {
+			return nil, err
+		}
+		allItemSet = append(allItemSet, itemSet{ active, predict })
+		compArr = append(compArr, completed)
+	}
+
+	res := identifyStartSymbolExpr(&compArr[len(compArr)-1], gram.StartSymbol)
+	return res, nil
+}
+
+func identifyStartSymbolExpr(subset *subSet, startSymb string) []string {
+	res := []string{}
+	for _, it := range *subset {
+		if it.nonTerm == startSymb {
+			res = append(res, it.nonTerm)
+		}
+	}
+	return res
 }
