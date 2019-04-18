@@ -2,6 +2,7 @@ package earley
 
 import(
 	"errors"
+	"log"
 	"github.com/maixianyu/parsing-method/common"
 )
 
@@ -165,16 +166,78 @@ func parse(gram common.Grammar, input string) ([]string, error) {
 		allItemSet = append(allItemSet, itemSet{ active, predict })
 	}
 
-	res := identifyStartSymbolExpr(&compArr[len(compArr)-1], gram.StartSymbol)
+	// make sure the startSymb is in the last completed array
+	startSymb, err := identifyStartSymbolExpr(&compArr[len(compArr)-1], gram.StartSymbol)
+	if err != nil {
+		return nil, err
+	}
+
+	// construct parse tree in completed array
+	res, err := constructTree(startSymb, compArr, gram.Symb2NTerminal)
+	if err != nil {
+		return nil, err
+	}
 	return res, nil
 }
 
-func identifyStartSymbolExpr(subset *subSet, startSymb string) []string {
-	res := []string{}
-	for _, it := range *subset {
-		if it.nonTerm == startSymb {
-			res = append(res, it.nonTerm)
+/* search for item at specific completed subset */
+func searchItem(symb string, at int, completedArr []subSet) (item, error) {
+	for i := range completedArr[at] {
+		if completedArr[at][i].nonTerm == symb {
+			return completedArr[at][i], nil
 		}
 	}
+	return item{}, errors.New("searchItem fails in " + symb + ",at=" + string(at))
+}
+
+/* a depth-first style function to combine item */
+func constructHelper(curItem item, curAt int, completedArr []subSet, symb2nt map[string]common.NonTerminal) []string {
+	res := []string{}
+	// conditon to terminate recursive
+	if _, found := symb2nt[curItem.rhSide[0]]; len(curItem.rhSide) == 1 && found == false {
+		return []string{curItem.rhSide[0]}
+	}
+
+	// loop symbols in the curItem backward
+	rhSide := curItem.rhSide
+	branchRes := make([][]string, len(rhSide))
+	for idx := len(rhSide)-1; idx > 0; idx-- {
+		symb := rhSide[idx]
+		at := curAt - (len(rhSide)-1-idx)
+		// if symb is a terminal
+		if _, found := symb2nt[symb]; found == false {
+			branchRes[idx] = []string{symb}
+		
+		// if symb is a non-terminal
+		} else {
+			it, err := searchItem(symb, at, completedArr)
+			if err != nil {
+				log.Fatal(err)
+			}
+			branchRes[idx] = constructHelper(it, at, completedArr, symb2nt)
+		}
+	}
+	res = common.CombTraceWithTemplate(branchRes, rhSide)
 	return res
+}
+
+/* construct parse tree from completed sets*/
+func constructTree(startSymb string, completedArr []subSet, symb2nt map[string]common.NonTerminal) ([]string, error) {
+	res := make([]string, 0)
+	for _, it := range completedArr[len(completedArr)-1] {
+		if it.nonTerm == startSymb {
+			res = append(res, constructHelper(it, len(completedArr), completedArr, symb2nt)...)
+		}
+		return res, nil
+	}
+	return nil, errors.New("Fail to find startSymbol in the last completed set.")
+}
+
+func identifyStartSymbolExpr(subset *subSet, startSymb string) (string, error) {
+	for _, it := range *subset {
+		if it.nonTerm == startSymb {
+			return startSymb, nil
+		}
+	}
+	return "", errors.New("Fail to parse input.")
 }
