@@ -3,12 +3,16 @@ package earley
 import(
 	"errors"
 	"log"
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/maixianyu/parsing-method/common"
 )
 
 type item struct {
 	dotPos int
-	// at starting from 1
+	// at starting from 0
 	at int
 	nonTerm string
 	rhSide []string
@@ -26,7 +30,7 @@ func initActiveSet(gram common.Grammar) subSet {
 	sub := make([]item, len(rhs))
 	for i, rh := range rhs {
 		sub[i].dotPos = 0
-		sub[i].at = 1
+		sub[i].at = 0
 		sub[i].nonTerm = gram.StartSymbol
 		sub[i].rhSide = rh
 	}
@@ -113,10 +117,11 @@ func (completed *subSet) completer(allItemSet []itemSet, symb2nt map[string]comm
 	// a loop for current items in completed
 	for _, it := range *completed {
 		idxSet := it.at
-		if idxSet > len(allItemSet) {
-			return nil, nil, errors.New("idxSet >= len(allItemSet)")
+		if idxSet >= len(allItemSet) {
+			info := fmt.Sprintf("idxSet=%d >= len(allItemSet)=%d", idxSet, len(allItemSet))
+			return nil, nil, errors.New(info)
 		}
-		searchSet := allItemSet[idxSet-1]
+		searchSet := allItemSet[idxSet]
 		c, a := searchSet.scanner(it.nonTerm, true, symb2nt)
 		newComp = append(newComp, c...)
 		newActv = append(newActv, a...)
@@ -138,7 +143,7 @@ func parse(gram common.Grammar, input string) ([]string, error) {
 	in := common.SliceInput(input, " ")
 	// make itemSet0
 	actv0 := initActiveSet(gram)
-	pred0, err := (&actv0).predictor(1, gram.Symb2NTerminal)
+	pred0, err := (&actv0).predictor(0, gram.Symb2NTerminal)
 	if err != nil {
 		return nil, err
 	}
@@ -156,9 +161,9 @@ func parse(gram common.Grammar, input string) ([]string, error) {
 			return nil, err
 		}
 		active = append(active, moreActv...)
+		completed = append(completed, moreComp...)
 		compArr = append(compArr, completed)
-		compArr = append(compArr, moreComp)
-		curAt := idx + 1
+		curAt := idx
 		predict, err := (&active).predictor(curAt + 1, gram.Symb2NTerminal)
 		if err != nil {
 			return nil, err
@@ -182,9 +187,13 @@ func parse(gram common.Grammar, input string) ([]string, error) {
 
 /* search for item at specific completed subset */
 func searchItem(symb string, at int, completedArr []subSet) (item, error) {
-	for i := range completedArr[at] {
-		if completedArr[at][i].nonTerm == symb {
-			return completedArr[at][i], nil
+	if at >= len(completedArr) {
+		return item{}, errors.New("at=" + strconv.Itoa(at) + " >= len(completedArr)=" + strconv.Itoa(len(completedArr)))
+	}
+	compSet := completedArr[at]
+	for i := range compSet {
+		if compSet[i].nonTerm == symb {
+			return compSet[i], nil
 		}
 	}
 	return item{}, errors.New("searchItem fails in " + symb + ",at=" + string(at))
@@ -192,7 +201,6 @@ func searchItem(symb string, at int, completedArr []subSet) (item, error) {
 
 /* a depth-first style function to combine item */
 func constructHelper(curItem item, curAt int, completedArr []subSet, symb2nt map[string]common.NonTerminal) []string {
-	res := []string{}
 	// conditon to terminate recursive
 	if _, found := symb2nt[curItem.rhSide[0]]; len(curItem.rhSide) == 1 && found == false {
 		return []string{curItem.rhSide[0]}
@@ -200,8 +208,9 @@ func constructHelper(curItem item, curAt int, completedArr []subSet, symb2nt map
 
 	// loop symbols in the curItem backward
 	rhSide := curItem.rhSide
+	res := []string{ strings.Join(rhSide, "") }
 	branchRes := make([][]string, len(rhSide))
-	for idx := len(rhSide)-1; idx > 0; idx-- {
+	for idx := len(rhSide)-1; idx >= 0; idx-- {
 		symb := rhSide[idx]
 		at := curAt - (len(rhSide)-1-idx)
 		// if symb is a terminal
@@ -211,13 +220,14 @@ func constructHelper(curItem item, curAt int, completedArr []subSet, symb2nt map
 		// if symb is a non-terminal
 		} else {
 			it, err := searchItem(symb, at, completedArr)
+			//fmt.Println(it)
 			if err != nil {
 				log.Fatal(err)
 			}
 			branchRes[idx] = constructHelper(it, at, completedArr, symb2nt)
 		}
 	}
-	res = common.CombTraceWithTemplate(branchRes, rhSide)
+	res = append(res, common.CombTraceWithTemplate(branchRes, rhSide)...)
 	return res
 }
 
@@ -226,9 +236,9 @@ func constructTree(startSymb string, completedArr []subSet, symb2nt map[string]c
 	res := make([]string, 0)
 	for _, it := range completedArr[len(completedArr)-1] {
 		if it.nonTerm == startSymb {
-			res = append(res, constructHelper(it, len(completedArr), completedArr, symb2nt)...)
+			res = append(res, constructHelper(it, len(completedArr)-1, completedArr, symb2nt)...)
+			return res, nil
 		}
-		return res, nil
 	}
 	return nil, errors.New("Fail to find startSymbol in the last completed set.")
 }

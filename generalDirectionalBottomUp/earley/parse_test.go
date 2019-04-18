@@ -16,7 +16,7 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	expect := subSet{
 		item{
 			dotPos: 0,
-			at: 1,
+			at: 0,
 			nonTerm: "S",
 			rhSide: []string{ "E" },
 		},
@@ -26,23 +26,23 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	}
 
 	// predictor
-	pred0, err := actv0.predictor(1, gram.Symb2NTerminal)
+	pred0, err := actv0.predictor(0, gram.Symb2NTerminal)
 	expect = subSet{
 		item{
 			dotPos: 0,
-			at: 1,
+			at: 0,
 			nonTerm: "E",
 			rhSide: []string{ "E", "Q", "F" },
 		},
 		item{
 			dotPos: 0,
-			at: 1,
+			at: 0,
 			nonTerm: "E",
 			rhSide: []string{ "F" },
 		},
 		item{
 			dotPos: 0,
-			at: 1,
+			at: 0,
 			nonTerm: "F",
 			rhSide: []string{ "a" },
 		},
@@ -61,7 +61,7 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	expect = subSet{
 		item{
 			dotPos: 1,
-			at: 1,
+			at: 0,
 			nonTerm: "F",
 			rhSide: []string{ "a" },
 		},
@@ -82,19 +82,19 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	expect = subSet{
 		item{
 			dotPos: 1,
-			at: 1,
+			at: 0,
 			nonTerm: "F",
 			rhSide: []string{ "a" },
 		},
 		item{
 			dotPos: 1,
-			at: 1,
+			at: 0,
 			nonTerm: "E",
 			rhSide: []string{ "F" },
 		},
 		item{
 			dotPos: 1,
-			at: 1,
+			at: 0,
 			nonTerm: "S",
 			rhSide: []string{ "E" },
 		},
@@ -105,7 +105,7 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	expect = subSet{
 		item{
 			dotPos: 1,
-			at: 1,
+			at: 0,
 			nonTerm: "E",
 			rhSide: []string{ "E", "Q", "F" },
 		},
@@ -124,8 +124,18 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	expect := []string{"S"}
-	if reflect.DeepEqual(res, expect) == false {
-		t.Fatalf("res want:%v, got:%v\n", expect, res)
+	expect := []string{
+		"E",
+		"EQF",
+		"EQFQF",
+		"FQFQF",
+		"aQFQF",
+		"a-FQF",
+		"a-aQF",
+		"a-a+F",
+		"a-a+a",
+	}
+	if reflect.DeepEqual(expect, res) == false {
+		t.Fatalf("parseLog want:%v, got:%v\n", expect, res)
 	}
 }
