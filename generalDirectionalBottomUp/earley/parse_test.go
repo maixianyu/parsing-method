@@ -114,3 +114,18 @@ func TestPredicorScannerCompleter(t *testing.T) {
 		t.Fatalf("actv1 want:%v, got:%v\n", expect, actv1)
 	}
 }
+
+
+func TestParse(t *testing.T) {
+	gramfile := "../../samples/grammar4earley"
+	gram := common.ReadGrammarFromFile(gramfile)
+
+	res, err := parse(gram, "a - a + a")
+	if err != nil {
+		t.Error(err)
+	}
+	expect := []string{"S"}
+	if reflect.DeepEqual(res, expect) == false {
+		t.Fatalf("res want:%v, got:%v\n", expect, res)
+	}
+}

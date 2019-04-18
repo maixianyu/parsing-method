@@ -157,7 +157,8 @@ func parse(gram common.Grammar, input string) ([]string, error) {
 		active = append(active, moreActv...)
 		compArr = append(compArr, completed)
 		compArr = append(compArr, moreComp)
-		predict, err := (&active).predictor(idx + 1, gram.Symb2NTerminal)
+		curAt := idx + 1
+		predict, err := (&active).predictor(curAt + 1, gram.Symb2NTerminal)
 		if err != nil {
 			return nil, err
 		}
