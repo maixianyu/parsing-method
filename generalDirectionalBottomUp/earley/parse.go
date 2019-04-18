@@ -87,9 +87,11 @@ func (its *itemSet) scanner(symb string, isNonTerminal bool, symb2nt map[string]
 			if _, found := symb2nt[curSymb]; curSymb == symb && found == isNonTerminal {
 				/* curSymb is at tail, then recognized as completed */
 				if it.dotPos == len(it.rhSide) - 1 {
+					it.dotPos += 1
 					completed = append(completed, it)
 				/* curSymb is not at tail, then recognized as active */
 				} else {
+					it.dotPos += 1
 					active = append(active, it)
 				}
 			}
@@ -98,11 +100,16 @@ func (its *itemSet) scanner(symb string, isNonTerminal bool, symb2nt map[string]
 	return
 }
 
-/* completer inspects completed set, which contains the items that have just been recognized and can now 
-*  be reduced.
+/* completer inspects completed set, which contains the items that have just been recognized
+and can now be reduced.
 */
 func (completed *subSet) completer(allItemSet []itemSet, symb2nt map[string]common.NonTerminal) (newComp subSet, newActv subSet, err error) {
 	newComp, newActv = []item{}, []item{}
+	if len(*completed) == 0 {
+		return 
+	}
+
+	// a loop for current items in completed
 	for _, it := range *completed {
 		idxSet := it.at
 		if idxSet > len(allItemSet) {
@@ -113,6 +120,15 @@ func (completed *subSet) completer(allItemSet []itemSet, symb2nt map[string]comm
 		newComp = append(newComp, c...)
 		newActv = append(newActv, a...)
 	}
+
+	// a recursive for new items added before
+	recurComp, recurActv, err := newComp.completer(allItemSet, symb2nt)
+	if err != nil {
+		return
+	}
+	newComp = append(newComp, recurComp...)
+	newActv = append(newActv, recurActv...)
+	
 	return
 }
 
@@ -139,12 +155,13 @@ func parse(gram common.Grammar, input string) ([]string, error) {
 			return nil, err
 		}
 		active = append(active, moreActv...)
+		compArr = append(compArr, completed)
+		compArr = append(compArr, moreComp)
 		predict, err := (&active).predictor(idx + 1, gram.Symb2NTerminal)
 		if err != nil {
 			return nil, err
 		}
 		allItemSet = append(allItemSet, itemSet{ active, predict })
-		compArr = append(compArr, completed)
 	}
 
 	res := identifyStartSymbolExpr(&compArr[len(compArr)-1], gram.StartSymbol)
