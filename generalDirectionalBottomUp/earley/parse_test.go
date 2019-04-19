@@ -14,12 +14,7 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	// initActiveSet
 	actv0 := initActiveSet(gram)
 	expect := subSet{
-		item{
-			dotPos: 0,
-			at: 0,
-			nonTerm: "S",
-			rhSide: []string{ "E" },
-		},
+		createItem(0, 0, "S", []string{ "E" }, 0),
 	}
 	if reflect.DeepEqual(actv0, expect) == false {
 		t.Fatalf("actv0 want:%v, got:%v\n", expect, actv0)
@@ -28,24 +23,9 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	// predictor
 	pred0, err := actv0.predictor(0, gram.Symb2NTerminal)
 	expect = subSet{
-		item{
-			dotPos: 0,
-			at: 0,
-			nonTerm: "E",
-			rhSide: []string{ "E", "Q", "F" },
-		},
-		item{
-			dotPos: 0,
-			at: 0,
-			nonTerm: "E",
-			rhSide: []string{ "F" },
-		},
-		item{
-			dotPos: 0,
-			at: 0,
-			nonTerm: "F",
-			rhSide: []string{ "a" },
-		},
+		createItem(0, 0, "E", []string{ "E", "Q", "F" }, 0),
+		createItem(0, 0, "E", []string{ "F" }, 1),
+		createItem(0, 0, "F", []string{ "a" }, 0),
 	}
 	if err != nil {
 		t.Fatal(err)
@@ -59,12 +39,7 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	allSet := []itemSet{iSet0}
 	compt1, actv1 := iSet0.scanner("a", false, gram.Symb2NTerminal)
 	expect = subSet{
-		item{
-			dotPos: 1,
-			at: 0,
-			nonTerm: "F",
-			rhSide: []string{ "a" },
-		},
+		createItem(1, 0, "F", []string{ "a" }, 0),
 	}
 	if reflect.DeepEqual(compt1, expect) == false {
 		t.Fatalf("compt1 want:%v, got:%v\n", expect, compt1)
@@ -80,24 +55,9 @@ func TestPredicorScannerCompleter(t *testing.T) {
 	compt1 = append(compt1, moreComp...)
 	actv1 = append(actv1, moreActv...)
 	expect = subSet{
-		item{
-			dotPos: 1,
-			at: 0,
-			nonTerm: "F",
-			rhSide: []string{ "a" },
-		},
-		item{
-			dotPos: 1,
-			at: 0,
-			nonTerm: "E",
-			rhSide: []string{ "F" },
-		},
-		item{
-			dotPos: 1,
-			at: 0,
-			nonTerm: "S",
-			rhSide: []string{ "E" },
-		},
+		createItem(1, 0, "F", []string{ "a" }, 0),
+		createItem(1, 0, "E", []string{ "F" }, 1),
+		createItem(1, 0, "S", []string{ "E" }, 0),
 	}
 	if reflect.DeepEqual(compt1, expect) == false {
 		t.Fatalf("compt1 want:%v, got:%v\n", expect, compt1)
@@ -138,4 +98,16 @@ func TestParse(t *testing.T) {
 	if reflect.DeepEqual(expect, res) == false {
 		t.Fatalf("parseLog want:%v, got:%v\n", expect, res)
 	}
+}
+
+
+func TestAmbiguous(t *testing.T) {
+	gramfile := "../../samples/ambiguous"
+	gram := common.ReadGrammarFromFile(gramfile)
+
+	res, err := parse(gram, "x x x")
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(res)
 }

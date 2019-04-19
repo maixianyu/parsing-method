@@ -16,6 +16,8 @@ type item struct {
 	at int
 	nonTerm string
 	rhSide []string
+	// used to generate fingerPrint
+	rhIdx int
 }
 
 /* active set or predict set */
@@ -24,18 +26,36 @@ type subSet []item
 /* itemSet consists of active set and predict set */
 type itemSet [2]subSet
 
+func itemFingerPrint(it item) string {
+	return fmt.Sprintf("%s,%d,%d,%d", it.nonTerm, it.rhIdx, it.dotPos, it.at)
+}
+
+/* create item with arguments */
+func createItem(dot, at int, nt string, rh []string, rhIdx int) item {
+	it := item{
+		dotPos: dot,
+		at: at,
+		nonTerm: nt,
+		rhSide: rh,
+		rhIdx: rhIdx,
+	}
+	return it
+}
+
 /* create an active set at the beginning */
 func initActiveSet(gram common.Grammar) subSet {
 	rhs := gram.Symb2NTerminal[gram.StartSymbol].RHSides
-	sub := make([]item, len(rhs))
+	sub := make([]item, 0, len(rhs))
 	for i, rh := range rhs {
-		sub[i].dotPos = 0
-		sub[i].at = 0
-		sub[i].nonTerm = gram.StartSymbol
-		sub[i].rhSide = rh
+		// first symbol in rh expression need to be non-terminal
+		if _, found := gram.Symb2NTerminal[rh[0]]; found == true {
+			it := createItem(0, 0, gram.StartSymbol, rh, i)
+			sub = append(sub, it)
+		}
 	}
 	return sub
 }
+
 
 /* a depth-first function to get more predict items from one item input */
 func predictHelper(it item, at int, symb2nt map[string]common.NonTerminal, exist *map[string]bool) subSet {
@@ -45,13 +65,8 @@ func predictHelper(it item, at int, symb2nt map[string]common.NonTerminal, exist
 	_, old := (*exist)[symb]
 	if nt, found := symb2nt[symb]; found == true && old == false {
 		/* add each of its right-hand side */
-		for _, rh := range nt.RHSides {
-			predItem := item{
-				dotPos: 0,
-				at: at,
-				nonTerm: symb,
-				rhSide: rh,					
-			}
+		for i, rh := range nt.RHSides {
+			predItem := createItem(0, at, symb, rh, i)
 			/* add item to predSet */
 			predSet = append(predSet, predItem)
 			/* mark symb as existed*/
@@ -134,8 +149,26 @@ func (completed *subSet) completer(allItemSet []itemSet, symb2nt map[string]comm
 	}
 	newComp = append(newComp, recurComp...)
 	newActv = append(newActv, recurActv...)
-	
+
+	// remove duplicates
+	newComp = removeDupItems(newComp)
+	newActv = removeDupItems(newActv)
+
 	return
+}
+
+/* remove duplicates items */
+func removeDupItems(ss subSet) subSet {
+	res := make([]item, 0, len(ss))
+	m := map[string]bool{}
+	for _, it := range ss {
+		fp := itemFingerPrint(it)
+		if _, found := m[fp]; found == false {
+			m[fp] = true
+			res = append(res, it)
+		} 
+	}
+	return res
 }
 
 /* parse */
@@ -178,6 +211,11 @@ func parse(gram common.Grammar, input string) ([]string, error) {
 	}
 
 	// construct parse tree in completed array
+	cutOff = map[int]bool{}
+	for _, its := range allItemSet {
+		fmt.Println(its[0])
+	}
+	fmt.Println(compArr)
 	res, err := constructTree(startSymb, compArr, gram.Symb2NTerminal)
 	if err != nil {
 		return nil, err
@@ -185,26 +223,48 @@ func parse(gram common.Grammar, input string) ([]string, error) {
 	return res, nil
 }
 
+var cutOff map[int]bool
+/* mark cut off in a global map */
+func markCutOff(itemNum int, at int, completedArr []subSet) {
+	cutOff[itemNum*len(completedArr) + at] = true
+}
+
+/* check cut off */
+func checkCutOff(itemNum int, at int, completedArr []subSet) bool {
+	_, found := cutOff[itemNum*len(completedArr) + at]
+	return found
+}
+
 /* search for item at specific completed subset */
-func searchItem(symb string, at int, completedArr []subSet) (item, error) {
+func searchItem(symb string, at int, completedArr []subSet) ([]int, error) {
 	if at >= len(completedArr) {
-		return item{}, errors.New("at=" + strconv.Itoa(at) + " >= len(completedArr)=" + strconv.Itoa(len(completedArr)))
+		return nil, errors.New("at=" + strconv.Itoa(at) + " >= len(completedArr)=" + strconv.Itoa(len(completedArr)))
 	}
+
 	compSet := completedArr[at]
+	res := []int{}
 	for i := range compSet {
-		if compSet[i].nonTerm == symb {
-			return compSet[i], nil
+		if compSet[i].nonTerm == symb && checkCutOff(i, at, completedArr) == false {
+			res = append(res, i)
 		}
 	}
-	return item{}, errors.New("searchItem fails in " + symb + ",at=" + string(at))
+
+	if len(res) == 0 {
+		return nil, errors.New(fmt.Sprintf("searchItem fails in %s,at=%d\n", symb, at))
+	} else {
+		return res, nil
+	}
 }
 
 /* a depth-first style function to combine item */
-func constructHelper(curItem item, curAt int, completedArr []subSet, symb2nt map[string]common.NonTerminal) []string {
+func constructHelper(itemIdx, curAt int, completedArr []subSet, symb2nt map[string]common.NonTerminal) []string {
+	curItem := completedArr[curAt][itemIdx]
 	// conditon to terminate recursive
 	if _, found := symb2nt[curItem.rhSide[0]]; len(curItem.rhSide) == 1 && found == false {
 		return []string{curItem.rhSide[0]}
 	}
+
+	markCutOff(itemIdx, curAt, completedArr)
 
 	// loop symbols in the curItem backward
 	rhSide := curItem.rhSide
@@ -219,12 +279,14 @@ func constructHelper(curItem item, curAt int, completedArr []subSet, symb2nt map
 		
 		// if symb is a non-terminal
 		} else {
-			it, err := searchItem(symb, at, completedArr)
-			//fmt.Println(it)
+			idxArr, err := searchItem(symb, at, completedArr)
 			if err != nil {
 				log.Fatal(err)
 			}
-			branchRes[idx] = constructHelper(it, at, completedArr, symb2nt)
+			branchRes[idx] = []string{}
+			for _, v := range idxArr {
+				branchRes[idx] = append(branchRes[idx], constructHelper(v, at, completedArr, symb2nt)...)
+			}
 		}
 	}
 	res = append(res, common.CombTraceWithTemplate(branchRes, rhSide)...)
@@ -234,9 +296,10 @@ func constructHelper(curItem item, curAt int, completedArr []subSet, symb2nt map
 /* construct parse tree from completed sets*/
 func constructTree(startSymb string, completedArr []subSet, symb2nt map[string]common.NonTerminal) ([]string, error) {
 	res := make([]string, 0)
-	for _, it := range completedArr[len(completedArr)-1] {
-		if it.nonTerm == startSymb {
-			res = append(res, constructHelper(it, len(completedArr)-1, completedArr, symb2nt)...)
+	for i, it := range completedArr[len(completedArr)-1] {
+		if it.nonTerm == startSymb && it.at == 0 {
+			fmt.Println(it)
+			res = append(res, constructHelper(i, len(completedArr)-1, completedArr, symb2nt)...)
 			return res, nil
 		}
 	}
