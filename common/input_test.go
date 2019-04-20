@@ -3,6 +3,7 @@ package common
 import (
 	//"fmt"
 	"testing"
+	"reflect"
 )
 
 func checkRes(t *testing.T, ok bool, res [][]string, expectOk bool, expect [][]string) {
@@ -118,4 +119,49 @@ func TestGeneratePartitionsNoERule(t *testing.T) {
 		[]string{"d", "", ""},
 	}
 	checkRes(t, ok, res, expectOk, expect)
+}
+
+func TestAssemblyPartitions(t *testing.T) {
+	// N = 4, M = 2, M < N
+	M := 2
+	input := []string{"apple", "bar", "c", "dog"}
+	_, v := AssemblyPartitions(input, M, NoERule)
+	expectV := false
+	if v != expectV {
+		t.Errorf("v want:%v, got:%v", expectV, v)
+	}
+
+	// N = 4, M = 2, M < N
+	M = 4
+	res, v := AssemblyPartitions(input, M, NoERule)
+	expectV = true
+	expect := [][]string{input}
+	if v != expectV {
+		t.Errorf("v want:%v, got:%v", expectV, v)
+	}
+	if reflect.DeepEqual(res, expect) == false {
+		t.Errorf("res want:%v, got:%v", expect, res)
+	}
+
+	// N = 4, M = 5, M > N
+	M = 5
+	res, v = AssemblyPartitions(input, M, NoERule)
+	expectV = true
+	if v != expectV {
+		t.Errorf("v want:%v, got:%v", expectV, v)
+	}
+	expect = [][]string{
+		[]string{"apple", "bar", "c", "d", "og"},
+		[]string{"apple", "bar", "c", "do", "g"},
+		[]string{"apple", "b", "ar", "c", "dog"},
+		[]string{"apple", "ba", "r", "c", "dog"},
+		[]string{"a", "pple", "bar", "c", "dog"},
+		[]string{"ap", "ple", "bar", "c", "dog"},
+		[]string{"app", "le", "bar", "c", "dog"},
+		[]string{"appl", "e", "bar", "c", "dog"},
+	}
+	if reflect.DeepEqual(expect, res) == false {
+		t.Errorf("res want:%v, got:%v", expect, res)
+	}
+
 }
