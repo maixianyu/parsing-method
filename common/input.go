@@ -32,8 +32,8 @@ func GeneratePartitions(input string, num int, erule ERule) ([][]string, bool) {
 	} else {
 		if erule == HasERule && num == 1 && input == "" {
 			return [][]string{
-				[]string{""},
-				}, true
+				{""},
+			}, true
 		} else if erule == NoERule && num > len(inputSlice) {
 			return [][]string{}, false
 		}
@@ -60,7 +60,7 @@ func GeneratePartitions(input string, num int, erule ERule) ([][]string, bool) {
 	*/
 	var res = [][]string{}
 	N := len(inputSlice)
-	for i := startIdx; i<=N; i++ {
+	for i := startIdx; i <= N; i++ {
 		curRes := inputSlice[0:i]
 		nxtRes, ok := GeneratePartitions(string(inputSlice[i:N]), num-1, erule)
 		if ok == true {
@@ -68,7 +68,7 @@ func GeneratePartitions(input string, num int, erule ERule) ([][]string, bool) {
 			if len(nxtRes) == 0 {
 				combRes := []string{string(curRes)}
 				res = append(res, combRes)
-			// nxtRes length > 0
+				// nxtRes length > 0
 			} else {
 				for _, nxt := range nxtRes {
 					combRes := []string{string(curRes)}
@@ -95,7 +95,8 @@ func AssemblyPartitions(text []string, M int, erule ERule) ([][]string, bool) {
 	if M == N {
 		return [][]string{text}, true
 	} else if M < N {
-		return nil, false
+		textStr := strings.Join(text, "")
+		return GeneratePartitions(textStr, M, erule)
 	}
 
 	// loop from 1 to M-(N-1) for first string text[0]
@@ -108,7 +109,7 @@ func AssemblyPartitions(text []string, M int, erule ERule) ([][]string, bool) {
 		}
 		// be careful of N of the last element in text
 		// when no more text need to assembly (M-i==0)
-		if N == 1 && M - i == 0 {
+		if N == 1 && M-i == 0 {
 			nxtRes, nxtV = [][]string{}, true
 		}
 
@@ -133,7 +134,7 @@ func AssemblyPartitions(text []string, M int, erule ERule) ([][]string, bool) {
 		nxtRes, v := AssemblyPartitions(text, M-1, NoERule)
 		if v == true {
 			for _, n := range nxtRes {
-				newRes := make([]string, 0, 1 + len(n))
+				newRes := make([]string, 0, 1+len(n))
 				// cur is "" because of epslon
 				newRes = append(newRes, "")
 				newRes = append(newRes, n...)

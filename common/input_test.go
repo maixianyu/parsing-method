@@ -2,8 +2,8 @@ package common
 
 import (
 	//"fmt"
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func checkRes(t *testing.T, ok bool, res [][]string, expectOk bool, expect [][]string) {
@@ -41,12 +41,12 @@ func TestGeneratePartitionsNoERule(t *testing.T) {
 	/* NoERule */
 	rule = NoERule
 	res, ok = GeneratePartitions(input, num, rule)
-	expect = [][]string{[]string{"12345678"}}
+	expect = [][]string{{"12345678"}}
 	checkRes(t, ok, res, expectOk, expect)
 	/* HasERule */
 	rule = HasERule
 	res, ok = GeneratePartitions(input, num, rule)
-	expect = [][]string{[]string{"12345678"}}
+	expect = [][]string{{"12345678"}}
 	checkRes(t, ok, res, expectOk, expect)
 
 	input = "12345678"
@@ -55,28 +55,28 @@ func TestGeneratePartitionsNoERule(t *testing.T) {
 	rule = NoERule
 	res, ok = GeneratePartitions(input, num, rule)
 	expect = [][]string{
-		[]string{"1", "2345678"},
-		[]string{"12", "345678"},
-		[]string{"123", "45678"},
-		[]string{"1234", "5678"},
-		[]string{"12345", "678"},
-		[]string{"123456", "78"},
-		[]string{"1234567", "8"},
+		{"1", "2345678"},
+		{"12", "345678"},
+		{"123", "45678"},
+		{"1234", "5678"},
+		{"12345", "678"},
+		{"123456", "78"},
+		{"1234567", "8"},
 	}
 	checkRes(t, ok, res, expectOk, expect)
 	/* HasERule */
 	rule = HasERule
 	res, ok = GeneratePartitions(input, num, rule)
 	expect = [][]string{
-		[]string{"", "12345678"},
-		[]string{"1", "2345678"},
-		[]string{"12", "345678"},
-		[]string{"123", "45678"},
-		[]string{"1234", "5678"},
-		[]string{"12345", "678"},
-		[]string{"123456", "78"},
-		[]string{"1234567", "8"},
-		[]string{"12345678", ""},
+		{"", "12345678"},
+		{"1", "2345678"},
+		{"12", "345678"},
+		{"123", "45678"},
+		{"1234", "5678"},
+		{"12345", "678"},
+		{"123456", "78"},
+		{"1234567", "8"},
+		{"12345678", ""},
 	}
 	checkRes(t, ok, res, expectOk, expect)
 
@@ -86,7 +86,7 @@ func TestGeneratePartitionsNoERule(t *testing.T) {
 	rule = NoERule
 	res, ok = GeneratePartitions(input, num, rule)
 	expect = [][]string{
-		[]string{"1", "2", "3", "4", "5", "6", "7", "8"},
+		{"1", "2", "3", "4", "5", "6", "7", "8"},
 	}
 	checkRes(t, ok, res, expectOk, expect)
 	/* HasERule */
@@ -95,16 +95,16 @@ func TestGeneratePartitionsNoERule(t *testing.T) {
 	rule = HasERule
 	res, ok = GeneratePartitions(input, num, rule)
 	expect = [][]string{
-		[]string{"", "", "123"},
-		[]string{"", "1", "23"},
-		[]string{"", "12", "3"},
-		[]string{"", "123", ""},
-		[]string{"1", "", "23"},
-		[]string{"1", "2", "3"},
-		[]string{"1", "23", ""},
-		[]string{"12", "", "3"},
-		[]string{"12", "3", ""},
-		[]string{"123", "", ""},
+		{"", "", "123"},
+		{"", "1", "23"},
+		{"", "12", "3"},
+		{"", "123", ""},
+		{"1", "", "23"},
+		{"1", "2", "3"},
+		{"1", "23", ""},
+		{"12", "", "3"},
+		{"12", "3", ""},
+		{"123", "", ""},
 	}
 	checkRes(t, ok, res, expectOk, expect)
 
@@ -114,28 +114,44 @@ func TestGeneratePartitionsNoERule(t *testing.T) {
 	rule = HasERule
 	res, ok = GeneratePartitions(input, num, rule)
 	expect = [][]string{
-		[]string{"", "", "d"},
-		[]string{"", "d", ""},
-		[]string{"d", "", ""},
+		{"", "", "d"},
+		{"", "d", ""},
+		{"d", "", ""},
 	}
 	checkRes(t, ok, res, expectOk, expect)
 }
 
 func TestAssemblyPartitions(t *testing.T) {
-	// N = 4, M = 2, M < N
+	// M < N
 	M := 2
 	input := []string{"apple", "bar", "c", "dog"}
-	_, v := AssemblyPartitions(input, M, NoERule)
-	expectV := false
+	res, v := AssemblyPartitions(input, M, NoERule)
+	expectV := true
 	if v != expectV {
 		t.Errorf("v want:%v, got:%v", expectV, v)
 	}
+	expect := [][]string{
+		[]string{"a", "pplebarcdog"},
+		[]string{"ap", "plebarcdog"},
+		[]string{"app", "lebarcdog"},
+		[]string{"appl", "ebarcdog"},
+		[]string{"apple", "barcdog"},
+		[]string{"appleb", "arcdog"},
+		[]string{"appleba", "rcdog"},
+		[]string{"applebar", "cdog"},
+		[]string{"applebarc", "dog"},
+		[]string{"applebarcd", "og"},
+		[]string{"applebarcdo", "g"},
+	}
+	if reflect.DeepEqual(res, expect) == false {
+		t.Errorf("res want:%v, got:%v", expect, res)
+	}
 
-	// N = 4, M = 2, M < N
+	// M == N
 	M = 4
-	res, v := AssemblyPartitions(input, M, NoERule)
+	res, v = AssemblyPartitions(input, M, NoERule)
 	expectV = true
-	expect := [][]string{input}
+	expect = [][]string{input}
 	if v != expectV {
 		t.Errorf("v want:%v, got:%v", expectV, v)
 	}
@@ -151,14 +167,14 @@ func TestAssemblyPartitions(t *testing.T) {
 		t.Errorf("v want:%v, got:%v", expectV, v)
 	}
 	expect = [][]string{
-		[]string{"apple", "bar", "c", "d", "og"},
-		[]string{"apple", "bar", "c", "do", "g"},
-		[]string{"apple", "b", "ar", "c", "dog"},
-		[]string{"apple", "ba", "r", "c", "dog"},
-		[]string{"a", "pple", "bar", "c", "dog"},
-		[]string{"ap", "ple", "bar", "c", "dog"},
-		[]string{"app", "le", "bar", "c", "dog"},
-		[]string{"appl", "e", "bar", "c", "dog"},
+		{"apple", "bar", "c", "d", "og"},
+		{"apple", "bar", "c", "do", "g"},
+		{"apple", "b", "ar", "c", "dog"},
+		{"apple", "ba", "r", "c", "dog"},
+		{"a", "pple", "bar", "c", "dog"},
+		{"ap", "ple", "bar", "c", "dog"},
+		{"app", "le", "bar", "c", "dog"},
+		{"appl", "e", "bar", "c", "dog"},
 	}
 	if reflect.DeepEqual(expect, res) == false {
 		t.Errorf("res want:%v, got:%v", expect, res)
