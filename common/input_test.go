@@ -121,15 +121,23 @@ func TestGeneratePartitionsNoERule(t *testing.T) {
 	checkRes(t, ok, res, expectOk, expect)
 }
 
-func TestAssemblyPartitions(t *testing.T) {
-	// M < N
-	M := 2
-	input := []string{"apple", "bar", "c", "dog"}
-	res, v := AssemblyPartitions(input, M, NoERule)
-	expectV := true
+func checkAsmParti(t *testing.T, M int, input []string, erule ERule, expectV bool, expect [][]string) {
+	res, v := AssemblyPartitions(input, M, erule)
 	if v != expectV {
 		t.Errorf("v want:%v, got:%v", expectV, v)
 	}
+	if reflect.DeepEqual(res, expect) == false {
+		t.Logf("M=%d, input=%v, erule=%v, expectV=%v, expect=%v\n", M, input, erule, expectV, expect)
+		t.Errorf("res want:%v, got:%v", expect, res)
+	}
+}
+
+func TestAssemblyPartitions(t *testing.T) {
+	// M < N, NoERule
+	M := 2
+	input := []string{"apple", "bar", "c", "dog"}
+	erule := NoERule
+	expectV := true
 	expect := [][]string{
 		[]string{"a", "pplebarcdog"},
 		[]string{"ap", "plebarcdog"},
@@ -143,29 +151,58 @@ func TestAssemblyPartitions(t *testing.T) {
 		[]string{"applebarcd", "og"},
 		[]string{"applebarcdo", "g"},
 	}
-	if reflect.DeepEqual(res, expect) == false {
-		t.Errorf("res want:%v, got:%v", expect, res)
-	}
+	checkAsmParti(t, M, input, erule, expectV, expect)
 
-	// M == N
+	// M < N, HasERule
+	erule = HasERule
+	expect = [][]string{
+		[]string{"", "applebarcdog"},
+		[]string{"a", "pplebarcdog"},
+		[]string{"ap", "plebarcdog"},
+		[]string{"app", "lebarcdog"},
+		[]string{"appl", "ebarcdog"},
+		[]string{"apple", "barcdog"},
+		[]string{"appleb", "arcdog"},
+		[]string{"appleba", "rcdog"},
+		[]string{"applebar", "cdog"},
+		[]string{"applebarc", "dog"},
+		[]string{"applebarcd", "og"},
+		[]string{"applebarcdo", "g"},
+		[]string{"applebarcdog", ""},
+	}
+	checkAsmParti(t, M, input, erule, expectV, expect)
+
+	// M == N, NoERule
 	M = 4
-	res, v = AssemblyPartitions(input, M, NoERule)
+	erule = NoERule
 	expectV = true
 	expect = [][]string{input}
-	if v != expectV {
-		t.Errorf("v want:%v, got:%v", expectV, v)
-	}
-	if reflect.DeepEqual(res, expect) == false {
-		t.Errorf("res want:%v, got:%v", expect, res)
-	}
+	checkAsmParti(t, M, input, erule, expectV, expect)
 
-	// N = 4, M = 5, M > N
-	M = 5
-	res, v = AssemblyPartitions(input, M, NoERule)
+	// M == N, NoERule
+	M = 3
+	input = []string{"a", "b", "c"}
+	erule = HasERule
 	expectV = true
-	if v != expectV {
-		t.Errorf("v want:%v, got:%v", expectV, v)
+	expect = [][]string{
+		[]string{"", "", "abc"},
+		[]string{"", "a", "bc"},
+		[]string{"", "ab", "c"},
+		[]string{"", "abc", ""},
+		[]string{"a", "", "bc"},
+		[]string{"a", "b", "c"},
+		[]string{"a", "bc", ""},
+		[]string{"ab", "", "c"},
+		[]string{"ab", "c", ""},
+		[]string{"abc", "", ""},
 	}
+	checkAsmParti(t, M, input, erule, expectV, expect)
+
+	// M > N, NoERule
+	input = []string{"apple", "bar", "c", "dog"}
+	M = 5
+	erule = NoERule
+	expectV = true
 	expect = [][]string{
 		{"apple", "bar", "c", "d", "og"},
 		{"apple", "bar", "c", "do", "g"},
@@ -176,8 +213,34 @@ func TestAssemblyPartitions(t *testing.T) {
 		{"app", "le", "bar", "c", "dog"},
 		{"appl", "e", "bar", "c", "dog"},
 	}
-	if reflect.DeepEqual(expect, res) == false {
-		t.Errorf("res want:%v, got:%v", expect, res)
-	}
+	checkAsmParti(t, M, input, erule, expectV, expect)
 
+	// M > N, HasERule
+	M = 4
+	input = []string{"my", "he"}
+	erule = HasERule
+	expect = [][]string{
+		{"my", "", "", "he"},// "my" partitioned into 1 pieces 
+		{"my", "", "h", "e"},//
+		{"my", "", "he", ""},//
+		{"my", "h", "", "e"},//
+		{"my", "h", "e", ""},//
+		{"my", "he", "", ""},//
+		{"", "my", "", "he"},// "my" partitioned into 2 pieces
+		{"", "my", "h", "e"},//
+		{"", "my", "he", ""},//
+		{"m", "y", "", "he"},//
+		{"m", "y", "h", "e"},//
+		{"m", "y", "he", ""},//
+		{"my", "", "", "he"},//
+		{"my", "", "h", "e"},//
+		{"my", "", "he", ""},//
+		{"", "", "my", "he"},// "my" partitioned into 3 pieces
+		{"", "m", "y", "he"},//
+		{"", "my", "", "he"},// * this one is duplicated, but it does not matter
+		{"m", "", "y", "he"},//
+		{"m", "y", "", "he"},//
+		{"my", "", "", "he"},//
+	}
+	checkAsmParti(t, M, input, erule, expectV, expect)
 }

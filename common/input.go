@@ -93,19 +93,24 @@ func AssemblyPartitions(text []string, M int, erule ERule) ([][]string, bool) {
 	// set conditions to teminate recursive
 	N := len(text)
 	if M == N {
-		return [][]string{text}, true
+		if erule == HasERule {
+			textStr := strings.Join(text, "")
+			return GeneratePartitions(textStr, M, erule)
+		} else {
+			return [][]string{text}, true
+		}
 	} else if M < N {
 		textStr := strings.Join(text, "")
 		return GeneratePartitions(textStr, M, erule)
 	}
 
-	// loop from 1 to M-(N-1) for first string text[0]
+	// loop from 1 to M-(N-1) pieces for first string text[0]
 	res := make([][]string, 0, M-(N-1))
 	for i := 1; i <= M-(N-1); i++ {
-		curRes, curV := GeneratePartitions(text[0], i, NoERule)
+		curRes, curV := GeneratePartitions(text[0], i, erule)
 		nxtRes, nxtV := [][]string{}, false
 		if N > 1 {
-			nxtRes, nxtV = AssemblyPartitions(text[1:], M-i, NoERule)
+			nxtRes, nxtV = AssemblyPartitions(text[1:], M-i, erule)
 		}
 		// be careful of N of the last element in text
 		// when no more text need to assembly (M-i==0)
@@ -124,21 +129,6 @@ func AssemblyPartitions(text []string, M int, erule ERule) ([][]string, bool) {
 						res = append(res, newRes)
 					}
 				}
-			}
-		}
-	}
-
-	// if epslon-rule is applied
-	if erule == HasERule {
-		// cur is "" because of epslon, so M-1 is passed to next
-		nxtRes, v := AssemblyPartitions(text, M-1, NoERule)
-		if v == true {
-			for _, n := range nxtRes {
-				newRes := make([]string, 0, 1+len(n))
-				// cur is "" because of epslon
-				newRes = append(newRes, "")
-				newRes = append(newRes, n...)
-				res = append(res, newRes)
 			}
 		}
 	}
